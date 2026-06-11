@@ -12,7 +12,7 @@
   .wrap{max-width:900px;margin:0 auto}
   .brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
   .version{color:#aaa;font-size:11px}
-  .tabs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin:6px 0}
+  .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:6px 0}
   .tabBtn{background:#242424}
   .tabBtn.active{background:#0b63ce}
   .page{display:none}.page.active{display:block}
@@ -66,13 +66,12 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.22</div></div>
+  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.23</div></div>
 
   <div class="tabs">
     <button id="timerTab" class="tabBtn active">計測</button>
     <button id="settingsTab" class="tabBtn">設定</button>
     <button id="resultsTab" class="tabBtn">計測結果</button>
-    <button id="debugTab" class="tabBtn">デバッグ</button>
   </div>
 
   <section id="timerPage" class="page active">
@@ -141,7 +140,7 @@
       </label>
     </div>
     <div class="note">
-      V0.0.22は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
+      V0.0.23は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
     </div>
   </section>
 
@@ -155,29 +154,6 @@
     <div id="resultsList"></div>
   </section>
 
-
-  <section id="debugPage" class="page">
-    <h2>デバッグ</h2>
-    <div class="settingsPanel">
-      <button id="refreshDebug" class="good">更新</button>
-      <button id="copyDebug">情報コピー</button>
-    </div>
-    <div class="resultCard">
-      <div class="muted">LocalStorage専用キー</div>
-      <div id="debugStorageKey" class="sub"></div>
-    </div>
-    <div class="resultCard">
-      <div class="muted">保存状態</div>
-      <div id="debugStorageInfo" class="sub"></div>
-    </div>
-    <div class="resultCard">
-      <div class="muted">ブラウザ情報</div>
-      <div id="debugBrowserInfo" class="sub"></div>
-    </div>
-    <div class="note">
-      容量はLocalStorageへ保存しているJSON文字列長からの概算です。iOS Safariではサイト単位の上限に近づくと保存に失敗する場合があります。
-    </div>
-  </section>
 
   <footer>Copyright © 2026 Shoji Katsu. All rights reserved.</footer>
 </div>
@@ -194,11 +170,9 @@
   const timerTab = document.getElementById("timerTab");
   const settingsTab = document.getElementById("settingsTab");
   const resultsTab = document.getElementById("resultsTab");
-  const debugTab = document.getElementById("debugTab");
   const timerPage = document.getElementById("timerPage");
   const settingsPage = document.getElementById("settingsPage");
   const resultsPage = document.getElementById("resultsPage");
-  const debugPage = document.getElementById("debugPage");
 
   const cameraToggleBtn = document.getElementById("cameraToggle");
   const measureToggleBtn = document.getElementById("measureToggle");
@@ -249,6 +223,7 @@
   let prevData = null;
   let passTimes = [];
   let autoRearmTimer = null;
+  let rearmPending = false;
 
   function fmt(sec){ if(!isFinite(sec)) return "00.000"; return sec.toFixed(3).padStart(6,"0"); }
   function blankFmt(sec){ return Number.isFinite(sec) ? fmt(sec) : "--.---"; }
@@ -281,10 +256,9 @@
   function soundGoal(){ beep(1040,0.10,0,0.08); beep(1040,0.10,0.15,0.08); }
 
   function updateState(){
-    const lockTabs = armed || running;
+    const lockTabs = armed || running || rearmPending;
     settingsTab.disabled = lockTabs;
     resultsTab.disabled = lockTabs;
-    debugTab.disabled = lockTabs;
     cameraToggleBtn.classList.remove("primary","danger");
     measureToggleBtn.classList.remove("primary","danger");
     stateBanner.classList.remove("stateCameraOff","stateCameraReady","stateArmed","stateRunning");
@@ -308,11 +282,11 @@
     measureToggleBtn.disabled=false;
     cameraOffLabel.style.display="none";
 
-    if(running){
+    if(running || rearmPending){
       measureToggleBtn.textContent="計測停止";
       measureToggleBtn.classList.add("danger");
-      stateBanner.textContent="計測中";
-      stateBanner.classList.add("stateRunning");
+      stateBanner.textContent = running ? "計測中" : "次走待機中";
+      stateBanner.classList.add(running ? "stateRunning" : "stateArmed");
     }else if(armed){
       measureToggleBtn.textContent="計測停止";
       measureToggleBtn.classList.add("danger");
@@ -328,7 +302,7 @@
 
   function switchPage(page){
     // 計測待機中・計測中は他画面へ移動禁止
-    if(page !== "timer" && (armed || running)){
+    if(page !== "timer" && (armed || running || rearmPending)){
       status.textContent = "先に計測停止してください";
       return;
     }
@@ -336,15 +310,13 @@
     timerTab.classList.toggle("active",page==="timer");
     settingsTab.classList.toggle("active",page==="settings");
     resultsTab.classList.toggle("active",page==="results");
-    debugTab.classList.toggle("active",page==="debug");
 
     timerPage.classList.toggle("active",page==="timer");
     settingsPage.classList.toggle("active",page==="settings");
     resultsPage.classList.toggle("active",page==="results");
-    debugPage.classList.toggle("active",page==="debug");
 
     if(page==="results") renderResults();
-    if(page==="debug") renderDebug();
+    if(page==="settings") renderDebug();
   }
 
   function loadResults(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");}catch{return [];} }
@@ -352,7 +324,7 @@
   function addResult(result){
     const results=loadResults();
     results.unshift(result);
-    saveResults(results.slice(0,50));
+    saveResults(results.slice(0,99));
     renderResults();
     renderRecentResults();
   }
@@ -450,7 +422,7 @@
 
   function stopMeasure(message="計測停止"){
     clearAutoRearm();
-    armed=false; running=false; finished=false;
+    armed=false; running=false; finished=false; rearmPending=false;
     startTs=0; startWallTime=null; lastDetectTs=-Infinity;
     // prevDataは消さない。ここが重要。消すと次の初回通過を取り逃がしやすい。
     passTimes=[];
@@ -463,6 +435,7 @@
   function prepareNextRun(message="次の走行を待機中"){
     clearAutoRearm();
     if(!cameraOn){ status.textContent="先にカメラを開始してください"; updateState(); return; }
+    rearmPending=false;
     armed=true; running=false; finished=false;
     startTs=0; startWallTime=null;
     // 初回通過を即許可。ここでperformance.now()を入れると「待機直後の通過」が無視される。
@@ -478,7 +451,7 @@
 
   function toggleMeasure(){
     ensureAudio();
-    if(armed || running){ stopMeasure("計測停止"); return; }
+    if(armed || running || rearmPending){ stopMeasure("計測停止"); return; }
     prepareNextRun("計測待機中。最初の通過でスタートします");
   }
 
@@ -542,6 +515,8 @@
     updateState();
 
     const delay=Math.max(500,Number(autoRearmDelaySecInput.value||5)*1000);
+    rearmPending=true;
+    updateState();
     autoRearmTimer=setTimeout(()=>{ if(cameraOn) prepareNextRun("自動で次の走行を待機中"); },delay);
   }
 
@@ -637,7 +612,7 @@
 
     return [
       `Storage Key: ${STORAGE_KEY}`,
-      `Saved Results: ${results.length} / 50`,
+      `Saved Results: ${results.length} / 99`,
       `Thumbnails: ${thumbs}`,
       `JSON Chars: ${chars}`,
       `Approx Size: ${formatBytes(bytes)} (${bytes} bytes)`,
@@ -654,7 +629,7 @@
 
     debugStorageKey.textContent = STORAGE_KEY;
     debugStorageInfo.innerHTML = `
-      保存件数：${results.length} / 50<br>
+      保存件数：${results.length} / 99<br>
       サムネイル付き：${thumbs} 件<br>
       JSON文字数：${raw.length}<br>
       概算容量：${formatBytes(bytes)} (${bytes} bytes)
@@ -779,7 +754,6 @@
   timerTab.addEventListener("click",()=>switchPage("timer"));
   settingsTab.addEventListener("click",()=>switchPage("settings"));
   resultsTab.addEventListener("click",()=>switchPage("results"));
-  debugTab.addEventListener("click",()=>switchPage("debug"));
   refreshResultsBtn.addEventListener("click",renderResults);
   exportAllCsvBtn.addEventListener("click",()=>downloadText("trykhana-results.csv",allResultsCsv()));
   clearResultsBtn.addEventListener("click",clearResults);
