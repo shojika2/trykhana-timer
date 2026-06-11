@@ -66,7 +66,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.19</div></div>
+  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.20</div></div>
 
   <div class="tabs">
     <button id="timerTab" class="tabBtn active">計測</button>
@@ -140,7 +140,7 @@
       </label>
     </div>
     <div class="note">
-      V0.0.19は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
+      V0.0.20は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
     </div>
   </section>
 
@@ -315,7 +315,7 @@
   function addResult(result){
     const results=loadResults();
     results.unshift(result);
-    saveResults(results.slice(0,300));
+    saveResults(results.slice(0,50));
     renderResults();
     renderRecentResults();
   }
@@ -332,6 +332,37 @@
     lap1Time.textContent=blankFmt(lap1);
     lap2Time.textContent=blankFmt(lap2);
     totalTime.textContent=fmt(total);
+  }
+
+  function captureGoalThumbnail(){
+    try{
+      if(!cameraOn || !video.videoWidth || !video.videoHeight) return "";
+      const tw=160;
+      const th=90;
+      const c=document.createElement("canvas");
+      c.width=tw;
+      c.height=th;
+      const ctx=c.getContext("2d");
+      const vw=video.videoWidth;
+      const vh=video.videoHeight;
+
+      // video表示のcoverに近い中央切り出しでサムネイル化
+      const srcAspect=vw/vh;
+      const dstAspect=tw/th;
+      let sx=0, sy=0, sw=vw, sh=vh;
+      if(srcAspect>dstAspect){
+        sw=vh*dstAspect;
+        sx=(vw-sw)/2;
+      }else{
+        sh=vw/dstAspect;
+        sy=(vh-sh)/2;
+      }
+      ctx.drawImage(video,sx,sy,sw,sh,0,0,tw,th);
+      return c.toDataURL("image/jpeg",0.58);
+    }catch(e){
+      console.warn("thumbnail capture failed", e);
+      return "";
+    }
   }
 
   async function startCamera(){
@@ -454,6 +485,7 @@
       targetLaps,
       splits,
       passTimes:passTimes.map(v=>Number(v.toFixed(3))),
+      thumbnail:captureGoalThumbnail(),
       settings:{
         lineDirection:lineDirectionInput.value,
         linePos:Number(linePosInput.value),
@@ -511,7 +543,8 @@
         div.innerHTML=`<div class="miniHead">直近 ${i+1}</div><div class="miniTime">--.---</div><div class="miniSub">記録なし</div>`;
       }else{
         const splits=(r.splits||[]).slice(0,2).map((s,idx)=>`L${idx+1} ${fmt(s)}`).join(" / ");
-        div.innerHTML=`<div class="miniHead">直近 ${i+1}　${r.finishTime ? fmtDateTime(r.finishTime).slice(11) : ""}</div><div class="miniTime">${fmt(Number(r.totalSec))}</div><div class="miniSub">${splits}</div>`;
+        const thumb = r.thumbnail ? `<img class="miniThumb" src="${r.thumbnail}" alt="goal thumbnail">` : "";
+        div.innerHTML=`<div class="miniHead">直近 ${i+1}　${r.finishTime ? fmtDateTime(r.finishTime).slice(11) : ""}</div><div class="miniTime">${fmt(Number(r.totalSec))}</div><div class="miniSub">${splits}</div>${thumb}`;
       }
       recentResults.appendChild(div);
     }
@@ -527,10 +560,15 @@
       div.className="resultCard";
       const isBest=Number(r.totalSec)===best;
       const splitsText=(r.splits||[]).map((s,i)=>`Lap ${i+1}: ${fmt(s)}`).join(" / ");
+      const thumb = r.thumbnail ? `<img class="resultThumb" src="${r.thumbnail}" alt="goal thumbnail">` : "";
       div.innerHTML=`
-        <div class="resultHead">
-          <div><span class="pill">#${results.length-idx}</span> ${isBest?'<span class="pill">BEST</span>':''}<div class="muted">ゴール ${r.finishTime ? fmtDateTime(r.finishTime) : "-"}</div></div>
-          <div class="resultTime">${fmt(Number(r.totalSec))}</div>
+        <div class="resultHead withThumb">
+          <div class="resultMain">
+            <span class="pill">#${results.length-idx}</span> ${isBest?'<span class="pill">BEST</span>':''}
+            <div class="muted">ゴール ${r.finishTime ? fmtDateTime(r.finishTime) : "-"}</div>
+            <div class="resultTime">${fmt(Number(r.totalSec))}</div>
+          </div>
+          ${thumb}
         </div>
         <div class="smallGrid">
           <div>スタート：${r.startTime ? fmtDateTime(r.startTime) : "-"}</div>
