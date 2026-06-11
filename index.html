@@ -65,15 +65,15 @@
   .videoBox {
     position: relative;
     width: 100%;
-    max-height: 34vh;
+    height: clamp(230px, 43vh, 390px);
     background: #000;
     border-radius: 10px;
     overflow: hidden;
   }
   video {
     width: 100%;
-    max-height: 34vh;
-    object-fit: contain;
+    height: 100%;
+    object-fit: cover;
     display: block;
   }
   canvas.overlay {
@@ -139,6 +139,40 @@
   }
   th:first-child, td:first-child { text-align: left; }
   .note { color: #bbb; font-size: 12px; line-height: 1.4; margin-top: 8px; }
+  .recentResults {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .recentMini {
+    background: #1c1c1c;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 7px 6px;
+    font-variant-numeric: tabular-nums;
+    min-height: 48px;
+  }
+  .recentMini .miniHead {
+    color: #aaa;
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  .recentMini .miniTime {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-top: 2px;
+  }
+  .recentMini .miniSub {
+    color: #bbb;
+    font-size: 11px;
+    line-height: 1.2;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .resultCard {
     background: #1c1c1c;
     border: 1px solid #333;
@@ -176,7 +210,7 @@
     body { padding: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
     h1 { font-size: 17px; }
     .tabs button { padding: 7px 4px; font-size: 13px; }
-    .videoBox, video { max-height: 29vh; }
+    .videoBox { height: clamp(250px, 45vh, 410px); }
     .timeValue { font-size: 18px; }
     .timeBox.total .timeValue { font-size: 21px; }
     .mainTime { font-size: 26px; }
@@ -222,10 +256,7 @@
       <button id="armReset" class="primary">計測待機</button>
     </div>
 
-    <table>
-      <thead><tr><th>通過</th><th>時刻</th><th>区間</th></tr></thead>
-      <tbody id="laps"></tbody>
-    </table>
+    <div class="recentResults" id="recentResults"></div>
   </section>
 
   <section id="settingsPage" class="page">
@@ -318,6 +349,7 @@
   const motionSpan = document.getElementById("motion");
   const lapsBody = document.getElementById("laps");
   const resultsList = document.getElementById("resultsList");
+  const recentResults = document.getElementById("recentResults");
 
   const work = document.createElement("canvas");
   const wctx = work.getContext("2d", { willReadFrequently: true });
@@ -376,6 +408,7 @@
     results.unshift(result);
     saveResults(results.slice(0, 300));
     renderResults();
+    renderRecentResults();
   }
 
   function updateSummary() {
@@ -575,6 +608,32 @@
     URL.revokeObjectURL(a.href);
   }
 
+
+  function renderRecentResults() {
+    const results = loadResults().slice(0, 2);
+    recentResults.innerHTML = "";
+    for (let i = 0; i < 2; i++) {
+      const r = results[i];
+      const div = document.createElement("div");
+      div.className = "recentMini";
+      if (!r) {
+        div.innerHTML = `
+          <div class="miniHead">直近 ${i + 1}</div>
+          <div class="miniTime">--.---</div>
+          <div class="miniSub">記録なし</div>
+        `;
+      } else {
+        const splits = (r.splits || []).slice(0, 2).map((s, idx) => `L${idx+1} ${fmt(s)}`).join(" / ");
+        div.innerHTML = `
+          <div class="miniHead">直近 ${i + 1}　${r.finishTime ? fmtDateTime(r.finishTime).slice(11) : ""}</div>
+          <div class="miniTime">${fmt(Number(r.totalSec))}</div>
+          <div class="miniSub">${splits}</div>
+        `;
+      }
+      recentResults.appendChild(div);
+    }
+  }
+
   function renderResults() {
     const results = loadResults();
     resultsList.innerHTML = "";
@@ -612,6 +671,7 @@
     if (!confirm("計測結果をすべて削除しますか？")) return;
     saveResults([]);
     renderResults();
+    renderRecentResults();
   }
 
   function getDetectionRect(vw, vh) {
@@ -726,6 +786,7 @@
   bandSizeInput.addEventListener("input", () => { prevData = null; });
 
   renderResults();
+  renderRecentResults();
   updateSummary();
   updateArmResetButton();
 })();
