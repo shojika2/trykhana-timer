@@ -53,6 +53,7 @@
   .muted{color:#aaa;font-size:13px}
   .smallGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;color:#ccc;font-size:13px}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#333;color:#ddd;font-size:12px}
+  footer{margin-top:12px;padding:8px 0;color:#888;font-size:11px;text-align:center}
   @media(max-width:430px){
     body{padding:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
     h1{font-size:17px}.tabs button{padding:7px 4px;font-size:13px}
@@ -65,7 +66,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.18</div></div>
+  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.19</div></div>
 
   <div class="tabs">
     <button id="timerTab" class="tabBtn active">計測</button>
@@ -139,7 +140,7 @@
       </label>
     </div>
     <div class="note">
-      V0.0.18は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
+      V0.0.19は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
     </div>
   </section>
 
@@ -152,6 +153,8 @@
     <h2>計測結果リスト</h2>
     <div id="resultsList"></div>
   </section>
+
+  <footer>Copyright © 2026 Shoji Katsu. All rights reserved.</footer>
 </div>
 
 <script>
@@ -474,13 +477,16 @@
   }
 
   function allResultsCsv(){
-    const rows=[["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec","auto_rearm_delay_sec","lead_only"]];
+    // CSVには設定情報を含めず、計測結果のみ出力する。
+    const rows=[["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec"]];
     loadResults().forEach(r=>{
       rows.push([
-        r.finishTime||"",r.startTime||"",r.totalSec??"",r.targetLaps??"",
-        r.splits?.[0]??"",r.splits?.[1]??"",
-        r.settings?.lineDirection??"",r.settings?.linePos??"",r.settings?.bandSize??"",
-        r.settings?.threshold??"",r.settings?.cooldownSec??"",r.settings?.autoRearmDelaySec??"",r.settings?.leadOnly??""
+        r.finishTime||"",
+        r.startTime||"",
+        r.totalSec??"",
+        r.targetLaps??"",
+        r.splits?.[0]??"",
+        r.splits?.[1]??""
       ]);
     });
     return rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
