@@ -316,6 +316,12 @@
           <option value="no">OFF</option>
         </select>
       </label>
+      <label>ゴール時タイム読み上げ
+        <select id="voiceReadout">
+          <option value="yes" selected>ON</option>
+          <option value="no">OFF</option>
+        </select>
+      </label>
     </div>
     <div class="note">
       カメラ停止で映像入力と解析ループを停止します。複数台走行で先頭車だけを拾う場合は、再検出禁止を後続車が通過し終わる程度まで長めにします。
@@ -365,6 +371,7 @@
   const autoRearmDelaySecInput = document.getElementById("autoRearmDelaySec");
   const targetLapsInput = document.getElementById("targetLaps");
   const leadOnlyInput = document.getElementById("leadOnly");
+  const voiceReadoutInput = document.getElementById("voiceReadout");
 
   const mainTime = document.getElementById("mainTime");
   const lap1Time = document.getElementById("lap1Time");
@@ -391,6 +398,88 @@
   let prevData = null;
   let passTimes = [];
   let autoRearmTimer = null;
+
+  let audioCtx = null;
+
+  function ensureAudio() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    } catch (e) {
+      console.warn("Audio unavailable", e);
+    }
+  }
+
+  function beep(freq = 880, duration = 0.18, delay = 0, gainValue = 0.08) {
+    if (!audioCtx) return;
+    const t0 = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, t0);
+
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(gainValue, t0 + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.02);
+  }
+
+  function soundArmed() {
+    ensureAudio();
+    beep(880, 0.45, 0, 0.09);
+  }
+
+  function soundGoal() {
+    ensureAudio();
+    beep(1040, 0.11, 0, 0.09);
+    beep(1040, 0.11, 0.16, 0.09);
+  }
+
+  function ensureSpeech() {
+    try {
+      if (!("speechSynthesis" in window)) return;
+      // iPhone Safari対策：ユーザー操作後に音声一覧を一度触っておく。
+      window.speechSynthesis.getVoices();
+    } catch (e) {
+      console.warn("Speech unavailable", e);
+    }
+  }
+
+  function formatTimeForSpeech(sec) {
+    const whole = Math.floor(sec);
+    const milli = Math.round((sec - whole) * 1000);
+    return `${whole}秒${String(milli).padStart(3, "0")}`;
+  }
+
+  function speakGoalTime(sec) {
+    if (voiceReadoutInput.value !== "yes") return;
+    if (!("speechSynthesis" in window)) return;
+
+    try {
+      const text = formatTimeForSpeech(sec);
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "ja-JP";
+      utter.rate = 1.05;
+      utter.pitch = 1.0;
+      utter.volume = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      const jaVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("ja"));
+      if (jaVoice) utter.voice = jaVoice;
+
+      // ピピッ音の後に読ませる。
+      setTimeout(() => window.speechSynthesis.speak(utter), 360);
+    } catch (e) {
+      console.warn("Speech failed", e);
+    }
+  }
+
 
   function fmt(sec) {
     if (!isFinite(sec)) return "00.000";
@@ -478,6 +567,8 @@
   }
 
   async function startCamera() {
+    ensureAudio();
+    ensureSpeech();
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -553,6 +644,7 @@
     status.textContent = message;
     updateSummary();
     updateState();
+    soundArmed();
   }
 
   function prepareNextRun(message = "次の走行を待機中") {
@@ -577,6 +669,8 @@
   }
 
   function toggleMeasure() {
+    ensureAudio();
+    ensureSpeech();
     if (armed || running) {
       stopMeasure("計測停止");
       return;
@@ -633,11 +727,14 @@
         threshold: Number(thresholdInput.value),
         cooldownSec: Number(cooldownSecInput.value),
         autoRearmDelaySec: Number(autoRearmDelaySecInput.value),
-        leadOnly: leadOnlyInput.value
+        leadOnly: leadOnlyInput.value,
+        voiceReadout: voiceReadoutInput.value
       }
     };
 
     addResult(result);
+    soundGoal();
+    speakGoalTime(totalSec);
 
     finished = true;
     running = false;
@@ -653,7 +750,7 @@
   }
 
   function allResultsCsv() {
-    const rows = [["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec","auto_rearm_delay_sec","lead_only"]];
+    const rows = [["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec","auto_rearm_delay_sec","lead_only","voice_readout"]];
     loadResults().forEach(r => {
       rows.push([
         r.finishTime || "",
@@ -668,7 +765,8 @@
         r.settings?.threshold ?? "",
         r.settings?.cooldownSec ?? "",
         r.settings?.autoRearmDelaySec ?? "",
-        r.settings?.leadOnly ?? ""
+        r.settings?.leadOnly ?? "",
+        r.settings?.voiceReadout ?? ""
       ]);
     });
     return rows.map(row => row.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
