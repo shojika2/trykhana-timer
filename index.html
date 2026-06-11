@@ -245,7 +245,7 @@
 <div class="wrap">
   <div class="brand">
     <h1>Trykhana Timer</h1>
-    <div class="version">V0.0.11</div>
+    <div class="version">V0.0.12</div>
   </div>
 
   <div class="tabs">
@@ -443,8 +443,8 @@
   }
 
   function soundLineCross() {
-    ensureAudio();
-    beep(740, 0.10, 0, 0.075);
+    // 検出瞬間は軽く鳴らすだけ。ここでAudioContext初期化やSpeech初期化はしない。
+    beep(740, 0.08, 0, 0.06);
   }
 
   let speechReady = false;
@@ -529,11 +529,13 @@
 
   function speakGoalTime(sec) {
     if (voiceReadoutInput.value !== "yes") return;
-    if (!speechReady) ensureSpeech();
-
+    // 計測検出中にspeechSynthesisを触るとiOSでカメラ処理が詰まる場合があるため、
+    // ゴール確定後、少し遅らせてから読み上げる。
     const text = formatTimeForSpeech(sec);
-    // ピピッ音の後に読ませる。iOSで遅延が必要な場合がある。
-    setTimeout(() => speakText(text), 420);
+    setTimeout(() => {
+      ensureSpeech();
+      speakText(text);
+    }, 900);
   }
 
 
@@ -613,7 +615,6 @@
 
   async function startCamera() {
     ensureAudio();
-    ensureSpeech();
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -715,7 +716,6 @@
 
   function toggleMeasure() {
     ensureAudio();
-    ensureSpeech();
     if (armed || running) {
       stopMeasure("計測停止");
       return;
@@ -778,13 +778,13 @@
       }
     };
 
-    addResult(result);
-    soundGoal();
-    speakGoalTime(totalSec);
-
     finished = true;
     running = false;
     armed = false;
+
+    addResult(result);
+    soundGoal();
+    speakGoalTime(totalSec);
     status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
     updateSummary();
     updateState();
