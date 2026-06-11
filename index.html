@@ -245,7 +245,7 @@
 <div class="wrap">
   <div class="brand">
     <h1>Trykhana Timer</h1>
-    <div class="version">V0.0.13</div>
+    <div class="version">Camera Prototype</div>
   </div>
 
   <div class="tabs">
@@ -316,13 +316,6 @@
           <option value="no">OFF</option>
         </select>
       </label>
-      <label>ゴール時タイム読み上げ
-        <select id="voiceReadout">
-          <option value="yes" selected>ON</option>
-          <option value="no">OFF</option>
-        </select>
-      </label>
-      <button id="voiceTest" class="good">読み上げテスト</button>
     </div>
     <div class="note">
       カメラ停止で映像入力と解析ループを停止します。複数台走行で先頭車だけを拾う場合は、再検出禁止を後続車が通過し終わる程度まで長めにします。
@@ -440,9 +433,16 @@
     beep(1040, 0.11, 0.16, 0.09);
   }
 
-  function soundLineCross() {
-    // 検出瞬間は軽く鳴らすだけ。ここでAudioContext初期化やSpeech初期化はしない。
-    beep(740, 0.08, 0, 0.06);
+
+  function fmt(sec) {
+    if (!isFinite(sec)) return "00.000";
+    return sec.toFixed(3).padStart(6, "0");
+  }
+  function blankFmt(sec) { return Number.isFinite(sec) ? fmt(sec) : "--.---"; }
+  function fmtDateTime(iso) {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
   function updateState() {
@@ -631,7 +631,6 @@
 
   function addPass(ts) {
     const targetLaps = Math.max(1, Number(targetLapsInput.value || 2));
-    soundLineCross();
     const nowSec = (ts - startTs) / 1000;
 
     if (!running) {
@@ -683,12 +682,12 @@
       }
     };
 
+    addResult(result);
+    soundGoal();
+
     finished = true;
     running = false;
     armed = false;
-
-    addResult(result);
-    soundGoal();
     status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
     updateSummary();
     updateState();
@@ -903,12 +902,6 @@
   refreshResultsBtn.addEventListener("click", renderResults);
   exportAllCsvBtn.addEventListener("click", () => downloadText("trykhana-results.csv", allResultsCsv()));
   clearResultsBtn.addEventListener("click", clearResults);
-
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      try { window.speechSynthesis.getVoices(); } catch {}
-    };
-  }
 
   lineDirectionInput.addEventListener("change", () => { prevData = null; });
   linePosInput.addEventListener("input", () => { prevData = null; });
