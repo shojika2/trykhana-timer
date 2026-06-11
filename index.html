@@ -10,118 +10,70 @@
     color: #f5f5f5;
     background: #111;
   }
-  body {
-    margin: 0;
-    padding: 12px;
-    background: #111;
-  }
-  h1 {
-    font-size: 20px;
-    margin: 0 0 8px;
-  }
-  .wrap {
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  .videoBox {
-    position: relative;
-    width: 100%;
-    background: #000;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  video, canvas.overlay {
-    width: 100%;
-    display: block;
-  }
-  canvas.overlay {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-  .panel {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0,1fr));
-    gap: 8px;
-    margin-top: 10px;
-  }
-  button, input, select {
-    font-size: 16px;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #444;
-  }
-  button {
-    color: #fff;
-    background: #333;
-  }
-  button.primary {
-    background: #0b63ce;
-  }
-  button.danger {
-    background: #9b1c1c;
-  }
-  label {
-    font-size: 13px;
-    color: #ddd;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .readout {
-    margin-top: 10px;
-    padding: 12px;
+  body { margin: 0; padding: 12px; background: #111; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 17px; margin: 16px 0 8px; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  .brand { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .version { color: #aaa; font-size: 12px; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 10px; }
+  .tabBtn { background: #242424; }
+  .tabBtn.active { background: #0b63ce; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .videoBox { position: relative; width: 100%; background: #000; border-radius: 12px; overflow: hidden; }
+  video, canvas.overlay { width: 100%; display: block; }
+  canvas.overlay { position: absolute; inset: 0; pointer-events: none; }
+  .panel { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 10px; }
+  button, input, select { font-size: 16px; padding: 10px; border-radius: 10px; border: 1px solid #444; }
+  button { color: #fff; background: #333; }
+  button.primary { background: #0b63ce; }
+  button.danger { background: #9b1c1c; }
+  button.good { background: #146b2e; }
+  label { font-size: 13px; color: #ddd; display: flex; flex-direction: column; gap: 4px; }
+  .readout { margin-top: 10px; padding: 12px; background: #1c1c1c; border-radius: 12px; font-variant-numeric: tabular-nums; }
+  .big { font-size: 40px; line-height: 1.1; font-weight: 700; }
+  .sub { color: #bbb; margin-top: 4px; line-height: 1.4; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  th, td { border-bottom: 1px solid #333; padding: 8px 4px; text-align: right; vertical-align: top; }
+  th:first-child, td:first-child { text-align: left; }
+  .note { color: #bbb; font-size: 13px; line-height: 1.55; margin-top: 10px; }
+  .resultCard {
     background: #1c1c1c;
+    border: 1px solid #333;
     border-radius: 12px;
+    padding: 10px;
+    margin-top: 8px;
     font-variant-numeric: tabular-nums;
   }
-  .big {
-    font-size: 40px;
-    line-height: 1.1;
-    font-weight: 700;
-  }
-  .sub {
-    color: #bbb;
-    margin-top: 4px;
-    line-height: 1.4;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    font-variant-numeric: tabular-nums;
-  }
-  th, td {
-    border-bottom: 1px solid #333;
-    padding: 8px 4px;
-    text-align: right;
-  }
-  th:first-child, td:first-child {
-    text-align: left;
-  }
-  .note {
-    color: #bbb;
-    font-size: 13px;
-    line-height: 1.55;
-    margin-top: 10px;
-  }
-  .brand {
+  .resultHead {
     display: flex;
-    align-items: baseline;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
+    align-items: baseline;
   }
-  .version {
-    color: #aaa;
+  .resultTime { font-size: 22px; font-weight: 700; }
+  .muted { color: #aaa; font-size: 13px; }
+  .smallGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+    color: #ccc;
+    font-size: 13px;
+  }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #333;
+    color: #ddd;
     font-size: 12px;
   }
   @media (max-width: 520px) {
-    .panel {
-      grid-template-columns: 1fr;
-    }
-    .big {
-      font-size: 34px;
-    }
+    .panel { grid-template-columns: 1fr; }
+    .big { font-size: 34px; }
+    .smallGrid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -132,83 +84,125 @@
     <div class="version">Camera Prototype</div>
   </div>
 
-  <div class="videoBox">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="overlay" class="overlay"></canvas>
+  <div class="tabs">
+    <button id="timerTab" class="tabBtn active">計測</button>
+    <button id="resultsTab" class="tabBtn">計測結果</button>
   </div>
 
-  <div class="panel">
-    <button id="startCam" class="primary">カメラ開始</button>
-    <button id="arm" class="primary">計測待機</button>
-    <button id="reset" class="danger">リセット</button>
-    <button id="exportCsv">CSV出力</button>
+  <section id="timerPage" class="page active">
+    <div class="videoBox">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="overlay" class="overlay"></canvas>
+    </div>
 
-    <label>検出ライン位置
-      <input id="lineY" type="range" min="5" max="95" value="50">
-    </label>
-    <label>検出窓の高さ
-      <input id="bandH" type="range" min="2" max="30" value="10">
-    </label>
-    <label>検出感度
-      <input id="threshold" type="range" min="5" max="80" value="24">
-    </label>
-    <label>再検出禁止時間 ms
-      <input id="cooldown" type="number" value="900" min="100" step="50">
-    </label>
-    <label>必要ラップ数
-      <input id="targetLaps" type="number" value="2" min="1" max="10">
-    </label>
-    <label>先頭車両のみ判定
-      <select id="leadOnly">
-        <option value="yes" selected>ON</option>
-        <option value="no">OFF</option>
-      </select>
-    </label>
-  </div>
+    <div class="panel">
+      <button id="startCam" class="primary">カメラ開始</button>
+      <button id="arm" class="primary">計測待機</button>
+      <button id="reset" class="danger">手動リセット</button>
+      <button id="exportCsv">CSV出力</button>
 
-  <div class="readout">
-    <div class="big" id="mainTime">00.000</div>
-    <div class="sub" id="status">未開始</div>
-    <div class="sub">変化量: <span id="motion">0</span></div>
-  </div>
+      <label>検出ライン方向
+        <select id="lineDirection">
+          <option value="vertical" selected>縦ライン：画面を左右に横切る</option>
+          <option value="horizontal">横ライン：画面を上下に横切る</option>
+        </select>
+      </label>
+      <label>検出ライン位置
+        <input id="linePos" type="range" min="5" max="95" value="50">
+      </label>
+      <label>検出窓の幅/高さ
+        <input id="bandSize" type="range" min="2" max="30" value="10">
+      </label>
+      <label>検出感度
+        <input id="threshold" type="range" min="5" max="80" value="24">
+      </label>
+      <label>再検出禁止時間 ms
+        <input id="cooldown" type="number" value="900" min="100" step="50">
+      </label>
+      <label>必要ラップ数
+        <input id="targetLaps" type="number" value="2" min="1" max="10">
+      </label>
+      <label>次走までの待機時間 ms
+        <input id="autoRearmDelay" type="number" value="2500" min="500" step="100">
+      </label>
+      <label>先頭車両のみ判定
+        <select id="leadOnly">
+          <option value="yes" selected>ON</option>
+          <option value="no">OFF</option>
+        </select>
+      </label>
+    </div>
 
-  <table>
-    <thead>
-      <tr><th>通過</th><th>時刻</th><th>区間/ラップ</th></tr>
-    </thead>
-    <tbody id="laps"></tbody>
-  </table>
+    <div class="readout">
+      <div class="big" id="mainTime">00.000</div>
+      <div class="sub" id="status">未開始</div>
+      <div class="sub">変化量: <span id="motion">0</span></div>
+    </div>
 
-  <div class="note">
-    使い方：スマホを三脚で固定し、スタート/ゴールラインを画面の横線に合わせます。
-    「カメラ開始」→「計測待機」。最初の通過をスタート、以後の通過をラップとして記録します。
-    複数台が走る場合は、先頭車両通過後の再検出禁止時間を長めにして、後続車を無視します。
-    本番精度を出すには逆光、影、観客、手ブレを避けてください。
-  </div>
+    <h2>現在の走行</h2>
+    <table>
+      <thead>
+        <tr><th>通過</th><th>時刻</th><th>区間/ラップ</th></tr>
+      </thead>
+      <tbody id="laps"></tbody>
+    </table>
+
+    <div class="note">
+      完走後は結果を保存し、指定した待機時間後に自動で次の計測待機へ戻ります。
+      スマホを三脚で固定し、車両が画面を左右に横切る構図なら「縦ライン」を選びます。
+      車両が画面を上下に横切る構図なら「横ライン」を選びます。
+      複数台走行では、先頭車両通過後の再検出禁止時間を長めにして後続車を無視します。
+    </div>
+  </section>
+
+  <section id="resultsPage" class="page">
+    <div class="panel">
+      <button id="refreshResults" class="good">結果を更新</button>
+      <button id="exportAllCsv">全結果CSV出力</button>
+      <button id="clearResults" class="danger">全結果削除</button>
+    </div>
+
+    <h2>計測結果リスト</h2>
+    <div id="resultsList"></div>
+  </section>
 </div>
 
 <script>
 (() => {
+  const STORAGE_KEY = "trykhanaTimerResults.v1";
+
   const video = document.getElementById("video");
   const overlay = document.getElementById("overlay");
   const octx = overlay.getContext("2d");
+
+  const timerTab = document.getElementById("timerTab");
+  const resultsTab = document.getElementById("resultsTab");
+  const timerPage = document.getElementById("timerPage");
+  const resultsPage = document.getElementById("resultsPage");
 
   const startCamBtn = document.getElementById("startCam");
   const armBtn = document.getElementById("arm");
   const resetBtn = document.getElementById("reset");
   const exportBtn = document.getElementById("exportCsv");
 
-  const lineYInput = document.getElementById("lineY");
-  const bandHInput = document.getElementById("bandH");
+  const refreshResultsBtn = document.getElementById("refreshResults");
+  const exportAllCsvBtn = document.getElementById("exportAllCsv");
+  const clearResultsBtn = document.getElementById("clearResults");
+
+  const lineDirectionInput = document.getElementById("lineDirection");
+  const linePosInput = document.getElementById("linePos");
+  const bandSizeInput = document.getElementById("bandSize");
   const thresholdInput = document.getElementById("threshold");
   const cooldownInput = document.getElementById("cooldown");
   const targetLapsInput = document.getElementById("targetLaps");
+  const autoRearmDelayInput = document.getElementById("autoRearmDelay");
   const leadOnlyInput = document.getElementById("leadOnly");
 
   const mainTime = document.getElementById("mainTime");
   const status = document.getElementById("status");
   const motionSpan = document.getElementById("motion");
   const lapsBody = document.getElementById("laps");
+  const resultsList = document.getElementById("resultsList");
 
   const work = document.createElement("canvas");
   const wctx = work.getContext("2d", { willReadFrequently: true });
@@ -217,14 +211,50 @@
   let running = false;
   let finished = false;
   let startTs = 0;
+  let startWallTime = null;
   let lastDetectTs = -Infinity;
   let prevData = null;
   let passTimes = [];
-  let rafId = null;
+  let loopStarted = false;
+  let autoRearmTimer = null;
 
   function fmt(sec) {
     if (!isFinite(sec)) return "00.000";
     return sec.toFixed(3).padStart(6, "0");
+  }
+
+  function fmtDateTime(iso) {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
+  function switchPage(page) {
+    const isTimer = page === "timer";
+    timerTab.classList.toggle("active", isTimer);
+    resultsTab.classList.toggle("active", !isTimer);
+    timerPage.classList.toggle("active", isTimer);
+    resultsPage.classList.toggle("active", !isTimer);
+    if (!isTimer) renderResults();
+  }
+
+  function loadResults() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function saveResults(results) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(results));
+  }
+
+  function addResult(result) {
+    const results = loadResults();
+    results.unshift(result);
+    saveResults(results.slice(0, 300));
+    renderResults();
   }
 
   async function startCamera() {
@@ -240,25 +270,53 @@
       });
       video.srcObject = stream;
       await video.play();
-      status.textContent = "カメラ起動。ラインを合わせて計測待機してください";
-      loop();
+      status.textContent = "カメラ起動。ライン方向と位置を合わせて計測待機してください";
+      if (!loopStarted) {
+        loopStarted = true;
+        loop();
+      }
     } catch (e) {
       status.textContent = "カメラを開始できません: " + e.message;
     }
   }
 
-  function reset() {
+  function clearAutoRearm() {
+    if (autoRearmTimer) {
+      clearTimeout(autoRearmTimer);
+      autoRearmTimer = null;
+    }
+  }
+
+  function resetManual() {
+    clearAutoRearm();
     armed = false;
     running = false;
     finished = false;
     startTs = 0;
+    startWallTime = null;
     lastDetectTs = -Infinity;
     prevData = null;
     passTimes = [];
     mainTime.textContent = "00.000";
-    status.textContent = "リセット済み";
+    status.textContent = "手動リセット済み";
     lapsBody.innerHTML = "";
     armBtn.textContent = "計測待機";
+  }
+
+  function prepareNextRun(message = "次の走行を待機中") {
+    clearAutoRearm();
+    armed = true;
+    running = false;
+    finished = false;
+    startTs = 0;
+    startWallTime = null;
+    lastDetectTs = performance.now();
+    prevData = null;
+    passTimes = [];
+    mainTime.textContent = "00.000";
+    status.textContent = message;
+    lapsBody.innerHTML = "";
+    armBtn.textContent = "待機中...";
   }
 
   function arm() {
@@ -266,10 +324,7 @@
       status.textContent = "先にカメラを開始してください";
       return;
     }
-    reset();
-    armed = true;
-    armBtn.textContent = "待機中...";
-    status.textContent = "最初の通過でスタートします";
+    prepareNextRun("最初の通過でスタートします");
   }
 
   function addPass(ts) {
@@ -278,7 +333,9 @@
 
     if (!running) {
       running = true;
+      finished = false;
       startTs = ts;
+      startWallTime = new Date();
       passTimes.push(0);
       status.textContent = "スタート検出";
       renderRows();
@@ -289,15 +346,51 @@
     const completedLaps = passTimes.length - 1;
 
     if (completedLaps >= targetLaps) {
-      finished = true;
-      running = false;
-      armed = false;
-      status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(nowSec)} 秒`;
-      armBtn.textContent = "計測待機";
+      finishRun(nowSec, targetLaps);
     } else {
       status.textContent = `Lap ${completedLaps}: ${fmt(nowSec - passTimes[passTimes.length - 2])} 秒`;
+      renderRows();
     }
+  }
+
+  function finishRun(totalSec, targetLaps) {
+    const finishWallTime = new Date();
+    const splits = [];
+    for (let i = 1; i < passTimes.length; i++) {
+      splits.push(Number((passTimes[i] - passTimes[i - 1]).toFixed(3)));
+    }
+
+    const result = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+      startTime: startWallTime ? startWallTime.toISOString() : null,
+      finishTime: finishWallTime.toISOString(),
+      totalSec: Number(totalSec.toFixed(3)),
+      targetLaps,
+      splits,
+      passTimes: passTimes.map(v => Number(v.toFixed(3))),
+      settings: {
+        lineDirection: lineDirectionInput.value,
+        linePos: Number(linePosInput.value),
+        bandSize: Number(bandSizeInput.value),
+        threshold: Number(thresholdInput.value),
+        cooldown: Number(cooldownInput.value)
+      }
+    };
+
+    addResult(result);
+
+    finished = true;
+    running = false;
+    armed = false;
+    status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
     renderRows();
+
+    const delay = Math.max(500, Number(autoRearmDelayInput.value || 2500));
+    autoRearmTimer = setTimeout(() => {
+      if (video.srcObject) {
+        prepareNextRun("自動で次の走行を待機中");
+      }
+    }, delay);
   }
 
   function renderRows() {
@@ -310,20 +403,108 @@
     });
   }
 
-  function exportCsv() {
+  function currentRunCsv() {
     const rows = [["pass","time_sec","split_sec"]];
     passTimes.forEach((t, i) => rows.push([
       i === 0 ? "START" : "LAP " + i,
       t.toFixed(3),
       i === 0 ? "" : (t - passTimes[i - 1]).toFixed(3)
     ]));
-    const csv = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    return rows.map(r => r.join(",")).join("\n");
+  }
+
+  function exportCsv() {
+    downloadText("trykhana-current-run.csv", currentRunCsv());
+  }
+
+  function allResultsCsv() {
+    const rows = [["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","lap3_sec","lap4_sec","lap5_sec","line_direction","line_pos","band_size","threshold","cooldown"]];
+    loadResults().forEach(r => {
+      rows.push([
+        r.finishTime || "",
+        r.startTime || "",
+        r.totalSec ?? "",
+        r.targetLaps ?? "",
+        r.splits?.[0] ?? "",
+        r.splits?.[1] ?? "",
+        r.splits?.[2] ?? "",
+        r.splits?.[3] ?? "",
+        r.splits?.[4] ?? "",
+        r.settings?.lineDirection ?? "",
+        r.settings?.linePos ?? "",
+        r.settings?.bandSize ?? "",
+        r.settings?.threshold ?? "",
+        r.settings?.cooldown ?? ""
+      ]);
+    });
+    return rows.map(row => row.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+  }
+
+  function downloadText(filename, text) {
+    const blob = new Blob([text], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "trykhana-timer.csv";
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  function renderResults() {
+    const results = loadResults();
+    resultsList.innerHTML = "";
+
+    if (results.length === 0) {
+      resultsList.innerHTML = `<div class="note">まだ計測結果がありません。</div>`;
+      return;
+    }
+
+    results.forEach((r, idx) => {
+      const div = document.createElement("div");
+      div.className = "resultCard";
+      const best = Math.min(...results.map(x => Number(x.totalSec)).filter(Number.isFinite));
+      const isBest = Number(r.totalSec) === best;
+      const splitsText = (r.splits || []).map((s, i) => `Lap ${i+1}: ${fmt(s)}`).join(" / ");
+
+      div.innerHTML = `
+        <div class="resultHead">
+          <div>
+            <span class="pill">#${results.length - idx}</span>
+            ${isBest ? '<span class="pill">BEST</span>' : ''}
+            <div class="muted">ゴール ${r.finishTime ? fmtDateTime(r.finishTime) : "-"}</div>
+          </div>
+          <div class="resultTime">${fmt(Number(r.totalSec))}</div>
+        </div>
+        <div class="smallGrid">
+          <div>スタート：${r.startTime ? fmtDateTime(r.startTime) : "-"}</div>
+          <div>ラップ数：${r.targetLaps ?? "-"}</div>
+          <div>検出：${r.settings?.lineDirection === "vertical" ? "縦ライン" : "横ライン"}</div>
+        </div>
+        <div class="sub">${splitsText}</div>
+      `;
+      resultsList.appendChild(div);
+    });
+  }
+
+  function clearResults() {
+    if (!confirm("計測結果をすべて削除しますか？")) return;
+    saveResults([]);
+    renderResults();
+  }
+
+  function getDetectionRect(vw, vh) {
+    const dir = lineDirectionInput.value;
+    const posPct = Number(linePosInput.value) / 100;
+    const bandPct = Number(bandSizeInput.value) / 100;
+
+    if (dir === "vertical") {
+      const bandW = Math.max(4, Math.floor(vw * bandPct));
+      const x = Math.max(0, Math.min(vw - bandW, Math.floor(vw * posPct - bandW / 2)));
+      return { x, y: 0, w: bandW, h: vh, dir };
+    } else {
+      const bandH = Math.max(4, Math.floor(vh * bandPct));
+      const y = Math.max(0, Math.min(vh - bandH, Math.floor(vh * posPct - bandH / 2)));
+      return { x: 0, y, w: vw, h: bandH, dir };
+    }
   }
 
   function drawOverlay(motion) {
@@ -332,24 +513,36 @@
     octx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
     octx.clearRect(0, 0, overlay.clientWidth, overlay.clientHeight);
 
-    const yPct = Number(lineYInput.value) / 100;
-    const bandPct = Number(bandHInput.value) / 100;
-    const y = overlay.clientHeight * yPct;
-    const h = overlay.clientHeight * bandPct;
+    const dir = lineDirectionInput.value;
+    const posPct = Number(linePosInput.value) / 100;
+    const bandPct = Number(bandSizeInput.value) / 100;
+    const hot = motion > Number(thresholdInput.value);
 
     octx.fillStyle = "rgba(255,255,255,0.10)";
-    octx.fillRect(0, y - h/2, overlay.clientWidth, h);
-    octx.strokeStyle = motion > Number(thresholdInput.value) ? "#ff4040" : "#00e0ff";
+    octx.strokeStyle = hot ? "#ff4040" : "#00e0ff";
     octx.lineWidth = 3;
-    octx.beginPath();
-    octx.moveTo(0, y);
-    octx.lineTo(overlay.clientWidth, y);
-    octx.stroke();
+
+    if (dir === "vertical") {
+      const x = overlay.clientWidth * posPct;
+      const w = overlay.clientWidth * bandPct;
+      octx.fillRect(x - w/2, 0, w, overlay.clientHeight);
+      octx.beginPath();
+      octx.moveTo(x, 0);
+      octx.lineTo(x, overlay.clientHeight);
+      octx.stroke();
+    } else {
+      const y = overlay.clientHeight * posPct;
+      const h = overlay.clientHeight * bandPct;
+      octx.fillRect(0, y - h/2, overlay.clientWidth, h);
+      octx.beginPath();
+      octx.moveTo(0, y);
+      octx.lineTo(overlay.clientWidth, y);
+      octx.stroke();
+    }
   }
 
   function loop(ts = performance.now()) {
-    rafId = requestAnimationFrame(loop);
-
+    requestAnimationFrame(loop);
     if (!video.videoWidth || !video.videoHeight) return;
 
     const vw = video.videoWidth;
@@ -357,13 +550,9 @@
     work.width = vw;
     work.height = vh;
 
-    const lineYPct = Number(lineYInput.value) / 100;
-    const bandPct = Number(bandHInput.value) / 100;
-    const bandH = Math.max(4, Math.floor(vh * bandPct));
-    const y = Math.max(0, Math.min(vh - bandH, Math.floor(vh * lineYPct - bandH / 2)));
-
     wctx.drawImage(video, 0, 0, vw, vh);
-    const img = wctx.getImageData(0, y, vw, bandH);
+    const r = getDetectionRect(vw, vh);
+    const img = wctx.getImageData(r.x, r.y, r.w, r.h);
     const data = img.data;
 
     let motion = 0;
@@ -399,8 +588,20 @@
 
   startCamBtn.addEventListener("click", startCamera);
   armBtn.addEventListener("click", arm);
-  resetBtn.addEventListener("click", reset);
+  resetBtn.addEventListener("click", resetManual);
   exportBtn.addEventListener("click", exportCsv);
+
+  timerTab.addEventListener("click", () => switchPage("timer"));
+  resultsTab.addEventListener("click", () => switchPage("results"));
+  refreshResultsBtn.addEventListener("click", renderResults);
+  exportAllCsvBtn.addEventListener("click", () => downloadText("trykhana-results.csv", allResultsCsv()));
+  clearResultsBtn.addEventListener("click", clearResults);
+
+  lineDirectionInput.addEventListener("change", () => { prevData = null; });
+  linePosInput.addEventListener("input", () => { prevData = null; });
+  bandSizeInput.addEventListener("input", () => { prevData = null; });
+
+  renderResults();
 })();
 </script>
 </body>
