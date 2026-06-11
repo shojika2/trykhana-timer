@@ -12,7 +12,7 @@
   .wrap{max-width:900px;margin:0 auto}
   .brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
   .version{color:#aaa;font-size:11px}
-  .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:6px 0}
+  .tabs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin:6px 0}
   .tabBtn{background:#242424}
   .tabBtn.active{background:#0b63ce}
   .page{display:none}.page.active{display:block}
@@ -66,12 +66,13 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.20</div></div>
+  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.21</div></div>
 
   <div class="tabs">
     <button id="timerTab" class="tabBtn active">計測</button>
     <button id="settingsTab" class="tabBtn">設定</button>
     <button id="resultsTab" class="tabBtn">計測結果</button>
+    <button id="debugTab" class="tabBtn">デバッグ</button>
   </div>
 
   <section id="timerPage" class="page active">
@@ -140,7 +141,7 @@
       </label>
     </div>
     <div class="note">
-      V0.0.20は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
+      V0.0.21は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
     </div>
   </section>
 
@@ -154,12 +155,36 @@
     <div id="resultsList"></div>
   </section>
 
+
+  <section id="debugPage" class="page">
+    <h2>デバッグ</h2>
+    <div class="settingsPanel">
+      <button id="refreshDebug" class="good">更新</button>
+      <button id="copyDebug">情報コピー</button>
+    </div>
+    <div class="resultCard">
+      <div class="muted">LocalStorage専用キー</div>
+      <div id="debugStorageKey" class="sub"></div>
+    </div>
+    <div class="resultCard">
+      <div class="muted">保存状態</div>
+      <div id="debugStorageInfo" class="sub"></div>
+    </div>
+    <div class="resultCard">
+      <div class="muted">ブラウザ情報</div>
+      <div id="debugBrowserInfo" class="sub"></div>
+    </div>
+    <div class="note">
+      容量はLocalStorageへ保存しているJSON文字列長からの概算です。iOS Safariではサイト単位の上限に近づくと保存に失敗する場合があります。
+    </div>
+  </section>
+
   <footer>Copyright © 2026 Shoji Katsu. All rights reserved.</footer>
 </div>
 
 <script>
 (() => {
-  const STORAGE_KEY = "trykhanaTimerResults.v1";
+  const STORAGE_KEY = "jp.shoji-ka2.trykhana-timer.results.v1";
 
   const video = document.getElementById("video");
   const overlay = document.getElementById("overlay");
@@ -169,9 +194,11 @@
   const timerTab = document.getElementById("timerTab");
   const settingsTab = document.getElementById("settingsTab");
   const resultsTab = document.getElementById("resultsTab");
+  const debugTab = document.getElementById("debugTab");
   const timerPage = document.getElementById("timerPage");
   const settingsPage = document.getElementById("settingsPage");
   const resultsPage = document.getElementById("resultsPage");
+  const debugPage = document.getElementById("debugPage");
 
   const cameraToggleBtn = document.getElementById("cameraToggle");
   const measureToggleBtn = document.getElementById("measureToggle");
@@ -180,6 +207,11 @@
   const refreshResultsBtn = document.getElementById("refreshResults");
   const exportAllCsvBtn = document.getElementById("exportAllCsv");
   const clearResultsBtn = document.getElementById("clearResults");
+  const refreshDebugBtn = document.getElementById("refreshDebug");
+  const copyDebugBtn = document.getElementById("copyDebug");
+  const debugStorageKey = document.getElementById("debugStorageKey");
+  const debugStorageInfo = document.getElementById("debugStorageInfo");
+  const debugBrowserInfo = document.getElementById("debugBrowserInfo");
 
   const lineDirectionInput = document.getElementById("lineDirection");
   const linePosInput = document.getElementById("linePos");
@@ -252,6 +284,7 @@
     const lockTabs = armed || running;
     settingsTab.disabled = lockTabs;
     resultsTab.disabled = lockTabs;
+    debugTab.disabled = lockTabs;
     cameraToggleBtn.classList.remove("primary","danger");
     measureToggleBtn.classList.remove("primary","danger");
     stateBanner.classList.remove("stateCameraOff","stateCameraReady","stateArmed","stateRunning");
@@ -580,6 +613,65 @@
     });
   }
 
+
+  function storageByteLength(str){
+    return new Blob([str]).size;
+  }
+
+  function formatBytes(bytes){
+    if(bytes < 1024) return `${bytes} B`;
+    if(bytes < 1024*1024) return `${(bytes/1024).toFixed(1)} KB`;
+    return `${(bytes/1024/1024).toFixed(2)} MB`;
+  }
+
+  function getDebugText(){
+    const raw = localStorage.getItem(STORAGE_KEY) || "[]";
+    const results = loadResults();
+    const bytes = storageByteLength(raw);
+    const chars = raw.length;
+    const thumbs = results.filter(r => !!r.thumbnail).length;
+
+    return [
+      `Storage Key: ${STORAGE_KEY}`,
+      `Saved Results: ${results.length} / 50`,
+      `Thumbnails: ${thumbs}`,
+      `JSON Chars: ${chars}`,
+      `Approx Size: ${formatBytes(bytes)} (${bytes} bytes)`,
+      `User Agent: ${navigator.userAgent}`,
+      `URL Origin: ${location.origin}`
+    ].join("\n");
+  }
+
+  function renderDebug(){
+    const raw = localStorage.getItem(STORAGE_KEY) || "[]";
+    const results = loadResults();
+    const bytes = storageByteLength(raw);
+    const thumbs = results.filter(r => !!r.thumbnail).length;
+
+    debugStorageKey.textContent = STORAGE_KEY;
+    debugStorageInfo.innerHTML = `
+      保存件数：${results.length} / 50<br>
+      サムネイル付き：${thumbs} 件<br>
+      JSON文字数：${raw.length}<br>
+      概算容量：${formatBytes(bytes)} (${bytes} bytes)
+    `;
+    debugBrowserInfo.innerHTML = `
+      Origin：${location.origin}<br>
+      Path：${location.pathname}<br>
+      UserAgent：${navigator.userAgent}
+    `;
+  }
+
+  async function copyDebugInfo(){
+    const text = getDebugText();
+    try{
+      await navigator.clipboard.writeText(text);
+      alert("デバッグ情報をコピーしました");
+    }catch{
+      alert(text);
+    }
+  }
+
   function clearResults(){
     if(!confirm("計測結果をすべて削除しますか？")) return;
     saveResults([]);
@@ -683,9 +775,12 @@
   timerTab.addEventListener("click",()=>switchPage("timer"));
   settingsTab.addEventListener("click",()=>switchPage("settings"));
   resultsTab.addEventListener("click",()=>switchPage("results"));
+  debugTab.addEventListener("click",()=>switchPage("debug"));
   refreshResultsBtn.addEventListener("click",renderResults);
   exportAllCsvBtn.addEventListener("click",()=>downloadText("trykhana-results.csv",allResultsCsv()));
   clearResultsBtn.addEventListener("click",clearResults);
+  refreshDebugBtn.addEventListener("click",renderDebug);
+  copyDebugBtn.addEventListener("click",copyDebugInfo);
 
   lineDirectionInput.addEventListener("change",()=>{prevData=null;});
   linePosInput.addEventListener("input",()=>{prevData=null;});
@@ -694,6 +789,7 @@
 
   renderResults();
   renderRecentResults();
+  renderDebug();
   updateTargetLapDisplay();
   updateSummary();
   updateState();
