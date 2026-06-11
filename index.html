@@ -245,7 +245,7 @@
 <div class="wrap">
   <div class="brand">
     <h1>Trykhana Timer</h1>
-    <div class="version">V0.0.12</div>
+    <div class="version">V0.0.13</div>
   </div>
 
   <div class="tabs">
@@ -363,7 +363,6 @@
   const refreshResultsBtn = document.getElementById("refreshResults");
   const exportAllCsvBtn = document.getElementById("exportAllCsv");
   const clearResultsBtn = document.getElementById("clearResults");
-  const voiceTestBtn = document.getElementById("voiceTest");
 
   const lineDirectionInput = document.getElementById("lineDirection");
   const linePosInput = document.getElementById("linePos");
@@ -373,7 +372,6 @@
   const autoRearmDelaySecInput = document.getElementById("autoRearmDelaySec");
   const targetLapsInput = document.getElementById("targetLaps");
   const leadOnlyInput = document.getElementById("leadOnly");
-  const voiceReadoutInput = document.getElementById("voiceReadout");
 
   const mainTime = document.getElementById("mainTime");
   const lap1Time = document.getElementById("lap1Time");
@@ -446,98 +444,6 @@
     // 検出瞬間は軽く鳴らすだけ。ここでAudioContext初期化やSpeech初期化はしない。
     beep(740, 0.08, 0, 0.06);
   }
-
-  let speechReady = false;
-
-  function ensureSpeech() {
-    try {
-      if (!("speechSynthesis" in window)) return false;
-      const synth = window.speechSynthesis;
-      synth.getVoices();
-      speechReady = true;
-      return true;
-    } catch (e) {
-      console.warn("Speech unavailable", e);
-      return false;
-    }
-  }
-
-  function formatTimeForSpeech(sec) {
-    const whole = Math.floor(sec);
-    const milli = Math.round((sec - whole) * 1000);
-    return `${whole}秒${String(milli).padStart(3, "0")}`;
-  }
-
-  function makeUtterance(text) {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "ja-JP";
-    utter.rate = 0.95;
-    utter.pitch = 1.0;
-    utter.volume = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    const jaVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("ja"));
-    if (jaVoice) utter.voice = jaVoice;
-    return utter;
-  }
-
-  function speakText(text, retry = true) {
-    if (!("speechSynthesis" in window)) {
-      status.textContent = "このブラウザは音声読み上げに未対応です";
-      return false;
-    }
-
-    try {
-      const synth = window.speechSynthesis;
-      synth.cancel();
-
-      const doSpeak = () => {
-        const utter = makeUtterance(text);
-        synth.speak(utter);
-      };
-
-      const voices = synth.getVoices();
-      if (voices.length === 0 && retry) {
-        // iOS Safariでは音声一覧の読み込みが遅れることがある。
-        setTimeout(() => speakText(text, false), 250);
-        return true;
-      }
-
-      doSpeak();
-
-      // iOS Safariで初回だけ無音になる場合の軽い再投入。
-      if (retry) {
-        setTimeout(() => {
-          if (!synth.speaking && !synth.pending) speakText(text, false);
-        }, 350);
-      }
-      return true;
-    } catch (e) {
-      console.warn("Speech failed", e);
-      status.textContent = "音声読み上げに失敗しました";
-      return false;
-    }
-  }
-
-  function testSpeech() {
-    ensureAudio();
-    ensureSpeech();
-    soundLineCross();
-    speakText("13秒582");
-    status.textContent = "読み上げテストを実行しました";
-  }
-
-  function speakGoalTime(sec) {
-    if (voiceReadoutInput.value !== "yes") return;
-    // 計測検出中にspeechSynthesisを触るとiOSでカメラ処理が詰まる場合があるため、
-    // ゴール確定後、少し遅らせてから読み上げる。
-    const text = formatTimeForSpeech(sec);
-    setTimeout(() => {
-      ensureSpeech();
-      speakText(text);
-    }, 900);
-  }
-
 
   function updateState() {
     cameraToggleBtn.classList.remove("primary", "danger");
@@ -773,8 +679,7 @@
         threshold: Number(thresholdInput.value),
         cooldownSec: Number(cooldownSecInput.value),
         autoRearmDelaySec: Number(autoRearmDelaySecInput.value),
-        leadOnly: leadOnlyInput.value,
-        voiceReadout: voiceReadoutInput.value
+        leadOnly: leadOnlyInput.value
       }
     };
 
@@ -784,7 +689,6 @@
 
     addResult(result);
     soundGoal();
-    speakGoalTime(totalSec);
     status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
     updateSummary();
     updateState();
@@ -796,7 +700,7 @@
   }
 
   function allResultsCsv() {
-    const rows = [["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec","auto_rearm_delay_sec","lead_only","voice_readout"]];
+    const rows = [["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec","auto_rearm_delay_sec","lead_only"]];
     loadResults().forEach(r => {
       rows.push([
         r.finishTime || "",
@@ -811,8 +715,7 @@
         r.settings?.threshold ?? "",
         r.settings?.cooldownSec ?? "",
         r.settings?.autoRearmDelaySec ?? "",
-        r.settings?.leadOnly ?? "",
-        r.settings?.voiceReadout ?? ""
+        r.settings?.leadOnly ?? ""
       ]);
     });
     return rows.map(row => row.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
@@ -1000,7 +903,6 @@
   refreshResultsBtn.addEventListener("click", renderResults);
   exportAllCsvBtn.addEventListener("click", () => downloadText("trykhana-results.csv", allResultsCsv()));
   clearResultsBtn.addEventListener("click", clearResults);
-  voiceTestBtn.addEventListener("click", testSpeech);
 
   if ("speechSynthesis" in window) {
     window.speechSynthesis.onvoiceschanged = () => {
