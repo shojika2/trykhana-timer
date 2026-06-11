@@ -10,34 +10,158 @@
     color: #f5f5f5;
     background: #111;
   }
-  body { margin: 0; padding: 12px; background: #111; }
-  h1 { font-size: 20px; margin: 0; }
-  h2 { font-size: 17px; margin: 16px 0 8px; }
+  body {
+    margin: 0;
+    padding: 8px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    background: #111;
+  }
+  h1 { font-size: 18px; margin: 0; }
+  h2 { font-size: 15px; margin: 8px 0 4px; }
   .wrap { max-width: 900px; margin: 0 auto; }
-  .brand { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-  .version { color: #aaa; font-size: 12px; }
-  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 10px; }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .version { color: #aaa; font-size: 11px; }
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 6px 0;
+  }
   .tabBtn { background: #242424; }
   .tabBtn.active { background: #0b63ce; }
   .page { display: none; }
   .page.active { display: block; }
-  .videoBox { position: relative; width: 100%; background: #000; border-radius: 12px; overflow: hidden; }
-  video, canvas.overlay { width: 100%; display: block; }
-  canvas.overlay { position: absolute; inset: 0; pointer-events: none; }
-  .panel { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 10px; }
-  button, input, select { font-size: 16px; padding: 10px; border-radius: 10px; border: 1px solid #444; }
+
+  .lapSummary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.1fr;
+    gap: 6px;
+    margin: 6px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .timeBox {
+    background: #1c1c1c;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 7px 6px;
+    min-width: 0;
+  }
+  .timeLabel {
+    color: #aaa;
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  .timeValue {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+  .timeBox.total .timeValue {
+    font-size: 23px;
+  }
+
+  .videoBox {
+    position: relative;
+    width: 100%;
+    max-height: 34vh;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  video {
+    width: 100%;
+    max-height: 34vh;
+    object-fit: contain;
+    display: block;
+  }
+  canvas.overlay {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .settingsPanel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .controlPanel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 6px;
+    margin-top: 6px;
+  }
+  button, input, select {
+    font-size: 14px;
+    padding: 8px;
+    border-radius: 9px;
+    border: 1px solid #444;
+  }
   button { color: #fff; background: #333; }
   button.primary { background: #0b63ce; }
   button.danger { background: #9b1c1c; }
   button.good { background: #146b2e; }
-  label { font-size: 13px; color: #ddd; display: flex; flex-direction: column; gap: 4px; }
-  .readout { margin-top: 10px; padding: 12px; background: #1c1c1c; border-radius: 12px; font-variant-numeric: tabular-nums; }
-  .big { font-size: 40px; line-height: 1.1; font-weight: 700; }
-  .sub { color: #bbb; margin-top: 4px; line-height: 1.4; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-variant-numeric: tabular-nums; }
-  th, td { border-bottom: 1px solid #333; padding: 8px 4px; text-align: right; vertical-align: top; }
+  label {
+    font-size: 12px;
+    color: #ddd;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  input[type="range"] {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .readout {
+    margin-top: 6px;
+    padding: 8px;
+    background: #1c1c1c;
+    border-radius: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mainTime {
+    font-size: 30px;
+    line-height: 1.05;
+    font-weight: 800;
+  }
+  .sub {
+    color: #bbb;
+    margin-top: 3px;
+    line-height: 1.25;
+    font-size: 12px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+  }
+  th, td {
+    border-bottom: 1px solid #333;
+    padding: 5px 3px;
+    text-align: right;
+    vertical-align: top;
+  }
   th:first-child, td:first-child { text-align: left; }
-  .note { color: #bbb; font-size: 13px; line-height: 1.55; margin-top: 10px; }
+  .note {
+    color: #bbb;
+    font-size: 12px;
+    line-height: 1.4;
+    margin-top: 6px;
+  }
   .resultCard {
     background: #1c1c1c;
     border: 1px solid #333;
@@ -70,10 +194,27 @@
     color: #ddd;
     font-size: 12px;
   }
-  @media (max-width: 520px) {
-    .panel { grid-template-columns: 1fr; }
-    .big { font-size: 34px; }
-    .smallGrid { grid-template-columns: 1fr; }
+
+  @media (max-width: 430px) {
+    body { padding: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+    h1 { font-size: 17px; }
+    .tabs button { padding: 7px; }
+    .videoBox, video { max-height: 29vh; }
+    .timeValue { font-size: 18px; }
+    .timeBox.total .timeValue { font-size: 21px; }
+    .mainTime { font-size: 26px; }
+    .settingsPanel { grid-template-columns: 1fr 1fr; }
+    button, input, select { font-size: 13px; padding: 7px; }
+    label { font-size: 11px; }
+  }
+
+  @media (max-width: 380px) {
+    .videoBox, video { max-height: 25vh; }
+    .settingsPanel { grid-template-columns: 1fr; }
+    .lapSummary { gap: 4px; }
+    .timeBox { padding: 6px 4px; }
+    .timeValue { font-size: 16px; }
+    .timeBox.total .timeValue { font-size: 18px; }
   }
 </style>
 </head>
@@ -90,21 +231,37 @@
   </div>
 
   <section id="timerPage" class="page active">
+    <div class="lapSummary">
+      <div class="timeBox">
+        <div class="timeLabel">1 Lap</div>
+        <div id="lap1Time" class="timeValue">--.---</div>
+      </div>
+      <div class="timeBox">
+        <div class="timeLabel">2 Lap</div>
+        <div id="lap2Time" class="timeValue">--.---</div>
+      </div>
+      <div class="timeBox total">
+        <div class="timeLabel">Total</div>
+        <div id="totalTime" class="timeValue">00.000</div>
+      </div>
+    </div>
+
     <div class="videoBox">
       <video id="video" autoplay playsinline muted></video>
       <canvas id="overlay" class="overlay"></canvas>
     </div>
 
-    <div class="panel">
-      <button id="startCam" class="primary">カメラ開始</button>
-      <button id="arm" class="primary">計測待機</button>
-      <button id="reset" class="danger">手動リセット</button>
-      <button id="exportCsv">CSV出力</button>
+    <div class="readout">
+      <div class="mainTime" id="mainTime">00.000</div>
+      <div class="sub" id="status">未開始</div>
+      <div class="sub">変化量: <span id="motion">0</span></div>
+    </div>
 
+    <div class="settingsPanel">
       <label>検出ライン方向
         <select id="lineDirection">
-          <option value="vertical" selected>縦ライン：画面を左右に横切る</option>
-          <option value="horizontal">横ライン：画面を上下に横切る</option>
+          <option value="vertical" selected>縦ライン：左右に横切る</option>
+          <option value="horizontal">横ライン：上下に横切る</option>
         </select>
       </label>
       <label>検出ライン位置
@@ -116,16 +273,16 @@
       <label>検出感度
         <input id="threshold" type="range" min="5" max="80" value="24">
       </label>
-      <label>再検出禁止時間 ms
-        <input id="cooldown" type="number" value="900" min="100" step="50">
-      </label>
       <label>必要ラップ数
-        <input id="targetLaps" type="number" value="2" min="1" max="10">
+        <input id="targetLaps" type="number" value="2" min="1" max="10" step="1">
       </label>
-      <label>次走までの待機時間 ms
-        <input id="autoRearmDelay" type="number" value="2500" min="500" step="100">
+      <label>再検出禁止 秒
+        <input id="cooldownSec" type="number" value="0.9" min="0.1" step="0.1">
       </label>
-      <label>先頭車両のみ判定
+      <label>次走待機 秒
+        <input id="autoRearmDelaySec" type="number" value="2.5" min="0.5" step="0.1">
+      </label>
+      <label>先頭車のみ判定
         <select id="leadOnly">
           <option value="yes" selected>ON</option>
           <option value="no">OFF</option>
@@ -133,32 +290,24 @@
       </label>
     </div>
 
-    <div class="readout">
-      <div class="big" id="mainTime">00.000</div>
-      <div class="sub" id="status">未開始</div>
-      <div class="sub">変化量: <span id="motion">0</span></div>
+    <div class="controlPanel">
+      <button id="startCam" class="primary">カメラ開始</button>
+      <button id="arm" class="primary">計測待機</button>
+      <button id="reset" class="danger">手動リセット</button>
     </div>
 
-    <h2>現在の走行</h2>
     <table>
       <thead>
-        <tr><th>通過</th><th>時刻</th><th>区間/ラップ</th></tr>
+        <tr><th>通過</th><th>時刻</th><th>区間</th></tr>
       </thead>
       <tbody id="laps"></tbody>
     </table>
-
-    <div class="note">
-      完走後は結果を保存し、指定した待機時間後に自動で次の計測待機へ戻ります。
-      スマホを三脚で固定し、車両が画面を左右に横切る構図なら「縦ライン」を選びます。
-      車両が画面を上下に横切る構図なら「横ライン」を選びます。
-      複数台走行では、先頭車両通過後の再検出禁止時間を長めにして後続車を無視します。
-    </div>
   </section>
 
   <section id="resultsPage" class="page">
-    <div class="panel">
+    <div class="settingsPanel">
       <button id="refreshResults" class="good">結果を更新</button>
-      <button id="exportAllCsv">全結果CSV出力</button>
+      <button id="exportAllCsv">CSV出力</button>
       <button id="clearResults" class="danger">全結果削除</button>
     </div>
 
@@ -183,7 +332,6 @@
   const startCamBtn = document.getElementById("startCam");
   const armBtn = document.getElementById("arm");
   const resetBtn = document.getElementById("reset");
-  const exportBtn = document.getElementById("exportCsv");
 
   const refreshResultsBtn = document.getElementById("refreshResults");
   const exportAllCsvBtn = document.getElementById("exportAllCsv");
@@ -193,12 +341,15 @@
   const linePosInput = document.getElementById("linePos");
   const bandSizeInput = document.getElementById("bandSize");
   const thresholdInput = document.getElementById("threshold");
-  const cooldownInput = document.getElementById("cooldown");
+  const cooldownSecInput = document.getElementById("cooldownSec");
+  const autoRearmDelaySecInput = document.getElementById("autoRearmDelaySec");
   const targetLapsInput = document.getElementById("targetLaps");
-  const autoRearmDelayInput = document.getElementById("autoRearmDelay");
   const leadOnlyInput = document.getElementById("leadOnly");
 
   const mainTime = document.getElementById("mainTime");
+  const lap1Time = document.getElementById("lap1Time");
+  const lap2Time = document.getElementById("lap2Time");
+  const totalTime = document.getElementById("totalTime");
   const status = document.getElementById("status");
   const motionSpan = document.getElementById("motion");
   const lapsBody = document.getElementById("laps");
@@ -223,6 +374,10 @@
     return sec.toFixed(3).padStart(6, "0");
   }
 
+  function blankFmt(sec) {
+    return Number.isFinite(sec) ? fmt(sec) : "--.---";
+  }
+
   function fmtDateTime(iso) {
     const d = new Date(iso);
     const pad = n => String(n).padStart(2, "0");
@@ -239,11 +394,8 @@
   }
 
   function loadResults() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+    catch { return []; }
   }
 
   function saveResults(results) {
@@ -255,6 +407,15 @@
     results.unshift(result);
     saveResults(results.slice(0, 300));
     renderResults();
+  }
+
+  function updateSummary() {
+    const lap1 = passTimes.length > 1 ? passTimes[1] - passTimes[0] : NaN;
+    const lap2 = passTimes.length > 2 ? passTimes[2] - passTimes[1] : NaN;
+    const total = passTimes.length > 0 ? passTimes[passTimes.length - 1] : (running ? (performance.now() - startTs) / 1000 : 0);
+    lap1Time.textContent = blankFmt(lap1);
+    lap2Time.textContent = blankFmt(lap2);
+    totalTime.textContent = fmt(total);
   }
 
   async function startCamera() {
@@ -270,7 +431,7 @@
       });
       video.srcObject = stream;
       await video.play();
-      status.textContent = "カメラ起動。ライン方向と位置を合わせて計測待機してください";
+      status.textContent = "カメラ起動。ラインを合わせて計測待機してください";
       if (!loopStarted) {
         loopStarted = true;
         loop();
@@ -301,6 +462,7 @@
     status.textContent = "手動リセット済み";
     lapsBody.innerHTML = "";
     armBtn.textContent = "計測待機";
+    updateSummary();
   }
 
   function prepareNextRun(message = "次の走行を待機中") {
@@ -316,7 +478,8 @@
     mainTime.textContent = "00.000";
     status.textContent = message;
     lapsBody.innerHTML = "";
-    armBtn.textContent = "待機中...";
+    armBtn.textContent = "待機中";
+    updateSummary();
   }
 
   function arm() {
@@ -328,7 +491,7 @@
   }
 
   function addPass(ts) {
-    const targetLaps = Number(targetLapsInput.value || 2);
+    const targetLaps = Math.max(1, Number(targetLapsInput.value || 2));
     const nowSec = (ts - startTs) / 1000;
 
     if (!running) {
@@ -339,6 +502,7 @@
       passTimes.push(0);
       status.textContent = "スタート検出";
       renderRows();
+      updateSummary();
       return;
     }
 
@@ -350,6 +514,7 @@
     } else {
       status.textContent = `Lap ${completedLaps}: ${fmt(nowSec - passTimes[passTimes.length - 2])} 秒`;
       renderRows();
+      updateSummary();
     }
   }
 
@@ -373,7 +538,7 @@
         linePos: Number(linePosInput.value),
         bandSize: Number(bandSizeInput.value),
         threshold: Number(thresholdInput.value),
-        cooldown: Number(cooldownInput.value)
+        cooldownSec: Number(cooldownSecInput.value)
       }
     };
 
@@ -384,12 +549,11 @@
     armed = false;
     status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
     renderRows();
+    updateSummary();
 
-    const delay = Math.max(500, Number(autoRearmDelayInput.value || 2500));
+    const delay = Math.max(500, Number(autoRearmDelaySecInput.value || 2.5) * 1000);
     autoRearmTimer = setTimeout(() => {
-      if (video.srcObject) {
-        prepareNextRun("自動で次の走行を待機中");
-      }
+      if (video.srcObject) prepareNextRun("自動で次の走行を待機中");
     }, delay);
   }
 
@@ -403,38 +567,20 @@
     });
   }
 
-  function currentRunCsv() {
-    const rows = [["pass","time_sec","split_sec"]];
-    passTimes.forEach((t, i) => rows.push([
-      i === 0 ? "START" : "LAP " + i,
-      t.toFixed(3),
-      i === 0 ? "" : (t - passTimes[i - 1]).toFixed(3)
-    ]));
-    return rows.map(r => r.join(",")).join("\n");
-  }
-
-  function exportCsv() {
-    downloadText("trykhana-current-run.csv", currentRunCsv());
-  }
-
   function allResultsCsv() {
-    const rows = [["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","lap3_sec","lap4_sec","lap5_sec","line_direction","line_pos","band_size","threshold","cooldown"]];
+    const rows = [["finish_time","start_time","total_sec","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec"]];
     loadResults().forEach(r => {
       rows.push([
         r.finishTime || "",
         r.startTime || "",
         r.totalSec ?? "",
-        r.targetLaps ?? "",
         r.splits?.[0] ?? "",
         r.splits?.[1] ?? "",
-        r.splits?.[2] ?? "",
-        r.splits?.[3] ?? "",
-        r.splits?.[4] ?? "",
         r.settings?.lineDirection ?? "",
         r.settings?.linePos ?? "",
         r.settings?.bandSize ?? "",
         r.settings?.threshold ?? "",
-        r.settings?.cooldown ?? ""
+        r.settings?.cooldownSec ?? ""
       ]);
     });
     return rows.map(row => row.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
@@ -458,10 +604,11 @@
       return;
     }
 
+    const best = Math.min(...results.map(x => Number(x.totalSec)).filter(Number.isFinite));
+
     results.forEach((r, idx) => {
       const div = document.createElement("div");
       div.className = "resultCard";
-      const best = Math.min(...results.map(x => Number(x.totalSec)).filter(Number.isFinite));
       const isBest = Number(r.totalSec) === best;
       const splitsText = (r.splits || []).map((s, i) => `Lap ${i+1}: ${fmt(s)}`).join(" / ");
 
@@ -476,8 +623,8 @@
         </div>
         <div class="smallGrid">
           <div>スタート：${r.startTime ? fmtDateTime(r.startTime) : "-"}</div>
-          <div>ラップ数：${r.targetLaps ?? "-"}</div>
           <div>検出：${r.settings?.lineDirection === "vertical" ? "縦ライン" : "横ライン"}</div>
+          <div>感度：${r.settings?.threshold ?? "-"}</div>
         </div>
         <div class="sub">${splitsText}</div>
       `;
@@ -573,7 +720,8 @@
     drawOverlay(motion);
 
     const threshold = Number(thresholdInput.value);
-    const cooldown = Number(cooldownInput.value);
+    const baseCooldown = Number(cooldownSecInput.value || 0.9) * 1000;
+    const cooldown = leadOnlyInput.value === "yes" ? baseCooldown : Math.min(baseCooldown, 500);
     const canDetect = ts - lastDetectTs > cooldown;
 
     if (armed && !finished && canDetect && motion > threshold) {
@@ -582,14 +730,15 @@
     }
 
     if (running && !finished) {
-      mainTime.textContent = fmt((ts - startTs) / 1000);
+      const elapsed = (ts - startTs) / 1000;
+      mainTime.textContent = fmt(elapsed);
+      totalTime.textContent = fmt(elapsed);
     }
   }
 
   startCamBtn.addEventListener("click", startCamera);
   armBtn.addEventListener("click", arm);
   resetBtn.addEventListener("click", resetManual);
-  exportBtn.addEventListener("click", exportCsv);
 
   timerTab.addEventListener("click", () => switchPage("timer"));
   resultsTab.addEventListener("click", () => switchPage("results"));
@@ -602,6 +751,7 @@
   bandSizeInput.addEventListener("input", () => { prevData = null; });
 
   renderResults();
+  updateSummary();
 })();
 </script>
 </body>
