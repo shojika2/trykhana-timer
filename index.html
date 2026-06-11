@@ -84,6 +84,15 @@
     inset: 0;
     pointer-events: none;
   }
+  .cameraOff {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #999;
+    background: #050505;
+    font-weight: 700;
+  }
 
   .controlPanel {
     display: grid;
@@ -104,6 +113,7 @@
     border: 1px solid #444;
   }
   button { color: #fff; background: #333; }
+  button:disabled { opacity: 0.45; filter: grayscale(1); }
   button.primary { background: #0b63ce; }
   button.danger { background: #9b1c1c; }
   button.good { background: #146b2e; }
@@ -119,9 +129,12 @@
     background: #1c1c1c;
     border: 1px solid #333;
   }
+  .stateCameraOff { background: #333; }
+  .stateCameraReady { background: #146b2e; }
   .stateStopped { background: #0b3d78; }
   .stateArmed { background: #a66a00; }
   .stateRunning { background: #9b1c1c; }
+
   label {
     font-size: 12px;
     color: #ddd;
@@ -154,6 +167,7 @@
   }
   th:first-child, td:first-child { text-align: left; }
   .note { color: #bbb; font-size: 12px; line-height: 1.4; margin-top: 8px; }
+
   .recentResults {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -168,17 +182,8 @@
     font-variant-numeric: tabular-nums;
     min-height: 48px;
   }
-  .recentMini .miniHead {
-    color: #aaa;
-    font-size: 11px;
-    line-height: 1.1;
-  }
-  .recentMini .miniTime {
-    font-size: 20px;
-    font-weight: 800;
-    line-height: 1.15;
-    margin-top: 2px;
-  }
+  .recentMini .miniHead { color: #aaa; font-size: 11px; line-height: 1.1; }
+  .recentMini .miniTime { font-size: 20px; font-weight: 800; line-height: 1.15; margin-top: 2px; }
   .recentMini .miniSub {
     color: #bbb;
     font-size: 11px;
@@ -188,6 +193,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   .resultCard {
     background: #1c1c1c;
     border: 1px solid #333;
@@ -258,18 +264,21 @@
     <div class="videoBox">
       <video id="video" autoplay playsinline muted></video>
       <canvas id="overlay" class="overlay"></canvas>
+      <div id="cameraOffLabel" class="cameraOff">カメラ停止中</div>
     </div>
 
     <div class="readout">
       <div class="mainTime" id="mainTime">00.000</div>
-      <div class="sub" id="status">未開始</div>
+      <div class="sub" id="status">カメラ停止中</div>
       <div class="sub">変化量: <span id="motion">0</span></div>
     </div>
 
     <div class="controlPanel">
-      <button id="startCam" class="primary">カメラ開始</button>
-      <button id="measureToggle" class="primary">計測開始</button>
+      <button id="cameraToggle" class="primary">カメラ開始</button>
+      <button id="measureToggle" class="primary" disabled>計測開始</button>
     </div>
+
+    <div id="stateBanner" class="stateBanner stateCameraOff">カメラ停止</div>
 
     <div class="recentResults" id="recentResults"></div>
   </section>
@@ -309,8 +318,7 @@
       </label>
     </div>
     <div class="note">
-      複数台走行で先頭車だけを拾う場合は、再検出禁止を後続車が通過し終わる程度まで長めにします。
-      初期値は再検出禁止5秒、次走待機5秒です。
+      カメラ停止で映像入力と解析ループを停止します。複数台走行で先頭車だけを拾う場合は、再検出禁止を後続車が通過し終わる程度まで長めにします。
     </div>
   </section>
 
@@ -332,6 +340,7 @@
   const video = document.getElementById("video");
   const overlay = document.getElementById("overlay");
   const octx = overlay.getContext("2d");
+  const cameraOffLabel = document.getElementById("cameraOffLabel");
 
   const timerTab = document.getElementById("timerTab");
   const settingsTab = document.getElementById("settingsTab");
@@ -340,7 +349,7 @@
   const settingsPage = document.getElementById("settingsPage");
   const resultsPage = document.getElementById("resultsPage");
 
-  const startCamBtn = document.getElementById("startCam");
+  const cameraToggleBtn = document.getElementById("cameraToggle");
   const measureToggleBtn = document.getElementById("measureToggle");
   const stateBanner = document.getElementById("stateBanner");
 
@@ -363,12 +372,15 @@
   const totalTime = document.getElementById("totalTime");
   const status = document.getElementById("status");
   const motionSpan = document.getElementById("motion");
-  const lapsBody = document.getElementById("laps");
   const resultsList = document.getElementById("resultsList");
   const recentResults = document.getElementById("recentResults");
 
   const work = document.createElement("canvas");
   const wctx = work.getContext("2d", { willReadFrequently: true });
+
+  let cameraOn = false;
+  let stream = null;
+  let rafId = null;
 
   let armed = false;
   let running = false;
@@ -378,7 +390,6 @@
   let lastDetectTs = -Infinity;
   let prevData = null;
   let passTimes = [];
-  let loopStarted = false;
   let autoRearmTimer = null;
 
   function fmt(sec) {
@@ -392,11 +403,31 @@
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
-  function updateMeasureState() {
+  function updateState() {
+    cameraToggleBtn.classList.remove("primary", "danger");
+    cameraToggleBtn.disabled = running;
     measureToggleBtn.classList.remove("primary", "warning", "danger");
-    stateBanner.classList.remove("stateStopped", "stateArmed", "stateRunning");
+    stateBanner.classList.remove("stateCameraOff", "stateCameraReady", "stateStopped", "stateArmed", "stateRunning");
+
+    if (!cameraOn) {
+      cameraToggleBtn.textContent = "カメラ開始";
+      cameraToggleBtn.classList.add("primary");
+      measureToggleBtn.textContent = "計測開始";
+      measureToggleBtn.disabled = true;
+      measureToggleBtn.classList.add("primary");
+      stateBanner.textContent = "カメラ停止";
+      stateBanner.classList.add("stateCameraOff");
+      cameraOffLabel.style.display = "grid";
+      return;
+    }
+
+    cameraToggleBtn.textContent = "カメラ停止";
+    cameraToggleBtn.classList.add("danger");
+    measureToggleBtn.disabled = false;
+    cameraOffLabel.style.display = "none";
 
     if (running) {
+      cameraToggleBtn.textContent = "カメラ停止";
       measureToggleBtn.textContent = "計測停止";
       measureToggleBtn.classList.add("danger");
       stateBanner.textContent = "計測中";
@@ -409,8 +440,8 @@
     } else {
       measureToggleBtn.textContent = "計測開始";
       measureToggleBtn.classList.add("primary");
-      stateBanner.textContent = "停止中";
-      stateBanner.classList.add("stateStopped");
+      stateBanner.textContent = "カメラ待機";
+      stateBanner.classList.add("stateCameraReady");
     }
   }
 
@@ -448,7 +479,7 @@
 
   async function startCamera() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: "environment" },
           width: { ideal: 1280 },
@@ -459,14 +490,46 @@
       });
       video.srcObject = stream;
       await video.play();
-      status.textContent = "カメラ起動。計測待機を押してください";
-      if (!loopStarted) {
-        loopStarted = true;
-        loop();
-      }
+      cameraOn = true;
+      status.textContent = "カメラ起動。計測開始を押してください";
+      prevData = null;
+      updateState();
+      startLoop();
     } catch (e) {
       status.textContent = "カメラを開始できません: " + e.message;
+      cameraOn = false;
+      updateState();
     }
+  }
+
+  function stopCamera() {
+    clearAutoRearm();
+    stopMeasure("カメラ停止");
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+    video.srcObject = null;
+    cameraOn = false;
+    prevData = null;
+    motionSpan.textContent = "0";
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    status.textContent = "カメラ停止中";
+    updateState();
+  }
+
+  function toggleCamera() {
+    if (cameraOn) stopCamera();
+    else startCamera();
+  }
+
+  function startLoop() {
+    if (rafId !== null) return;
+    rafId = requestAnimationFrame(loop);
   }
 
   function clearAutoRearm() {
@@ -476,7 +539,7 @@
     }
   }
 
-  function resetManual() {
+  function stopMeasure(message = "計測停止") {
     clearAutoRearm();
     armed = false;
     running = false;
@@ -487,14 +550,18 @@
     prevData = null;
     passTimes = [];
     mainTime.textContent = "00.000";
-    status.textContent = "手動リセット済み";
-    lapsBody.innerHTML = "";
+    status.textContent = message;
     updateSummary();
-    updateMeasureState();
+    updateState();
   }
 
   function prepareNextRun(message = "次の走行を待機中") {
     clearAutoRearm();
+    if (!cameraOn) {
+      status.textContent = "先にカメラを開始してください";
+      updateState();
+      return;
+    }
     armed = true;
     running = false;
     finished = false;
@@ -505,19 +572,13 @@
     passTimes = [];
     mainTime.textContent = "00.000";
     status.textContent = message;
-    lapsBody.innerHTML = "";
     updateSummary();
-    updateMeasureState();
+    updateState();
   }
 
   function toggleMeasure() {
     if (armed || running) {
-      resetManual();
-      status.textContent = "計測停止";
-      return;
-    }
-    if (!video.srcObject) {
-      status.textContent = "先にカメラを開始してください";
+      stopMeasure("計測停止");
       return;
     }
     prepareNextRun("計測待機中。最初の通過でスタートします");
@@ -534,9 +595,8 @@
       startWallTime = new Date();
       passTimes.push(0);
       status.textContent = "スタート検出";
-      renderRows();
       updateSummary();
-      updateMeasureState();
+      updateState();
       return;
     }
 
@@ -547,7 +607,6 @@
       finishRun(nowSec, targetLaps);
     } else {
       status.textContent = `Lap ${completedLaps}: ${fmt(nowSec - passTimes[passTimes.length - 2])} 秒`;
-      renderRows();
       updateSummary();
     }
   }
@@ -584,24 +643,13 @@
     running = false;
     armed = false;
     status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
-    renderRows();
     updateSummary();
-    updateMeasureState();
+    updateState();
 
     const delay = Math.max(500, Number(autoRearmDelaySecInput.value || 5) * 1000);
     autoRearmTimer = setTimeout(() => {
-      if (video.srcObject) prepareNextRun("自動で次の走行を待機中");
+      if (cameraOn) prepareNextRun("自動で次の走行を待機中");
     }, delay);
-  }
-
-  function renderRows() {
-    lapsBody.innerHTML = "";
-    passTimes.forEach((t, i) => {
-      const tr = document.createElement("tr");
-      const split = i === 0 ? "-" : fmt(t - passTimes[i - 1]);
-      tr.innerHTML = `<td>${i === 0 ? "START" : "LAP " + i}</td><td>${fmt(t)}</td><td>${split}</td>`;
-      lapsBody.appendChild(tr);
-    });
   }
 
   function allResultsCsv() {
@@ -634,7 +682,6 @@
     a.click();
     URL.revokeObjectURL(a.href);
   }
-
 
   function renderRecentResults() {
     const results = loadResults().slice(0, 2);
@@ -751,8 +798,8 @@
   }
 
   function loop(ts = performance.now()) {
-    requestAnimationFrame(loop);
-    if (!video.videoWidth || !video.videoHeight) return;
+    rafId = null;
+    if (!cameraOn || !video.videoWidth || !video.videoHeight) return;
 
     const vw = video.videoWidth;
     const vh = video.videoHeight;
@@ -796,9 +843,11 @@
       mainTime.textContent = fmt(elapsed);
       totalTime.textContent = fmt(elapsed);
     }
+
+    if (cameraOn) rafId = requestAnimationFrame(loop);
   }
 
-  startCamBtn.addEventListener("click", startCamera);
+  cameraToggleBtn.addEventListener("click", toggleCamera);
   measureToggleBtn.addEventListener("click", toggleMeasure);
 
   timerTab.addEventListener("click", () => switchPage("timer"));
@@ -815,7 +864,7 @@
   renderResults();
   renderRecentResults();
   updateSummary();
-  updateMeasureState();
+  updateState();
 })();
 </script>
 </body>
