@@ -65,7 +65,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.15</div></div>
+  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.17</div></div>
 
   <div class="tabs">
     <button id="timerTab" class="tabBtn active">計測</button>
@@ -139,7 +139,7 @@
       </label>
     </div>
     <div class="note">
-      V0.0.15は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
+      V0.0.17は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
     </div>
   </section>
 
@@ -288,12 +288,19 @@
   }
 
   function switchPage(page){
+    // 計測待機中・計測中は設定画面や結果画面へ移動禁止
+    if(page !== "timer" && (armed || running)){
+      status.textContent = "先に計測停止してください";
+      return;
+    }
+
     timerTab.classList.toggle("active",page==="timer");
     settingsTab.classList.toggle("active",page==="settings");
     resultsTab.classList.toggle("active",page==="results");
     timerPage.classList.toggle("active",page==="timer");
     settingsPage.classList.toggle("active",page==="settings");
     resultsPage.classList.toggle("active",page==="results");
+
     if(page==="results") renderResults();
   }
 
