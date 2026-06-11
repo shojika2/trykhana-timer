@@ -65,7 +65,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.14</div></div>
+  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.15</div></div>
 
   <div class="tabs">
     <button id="timerTab" class="tabBtn active">計測</button>
@@ -77,7 +77,10 @@
     <div class="lapSummary">
       <div class="timeBox"><div class="timeLabel">1 Lap</div><div id="lap1Time" class="timeValue">--.---</div></div>
       <div class="timeBox"><div class="timeLabel">2 Lap</div><div id="lap2Time" class="timeValue">--.---</div></div>
-      <div class="timeBox total"><div class="timeLabel">Total</div><div id="totalTime" class="timeValue">00.000</div></div>
+      <div class="timeBox total">
+        <div class="timeLabel">Total / Goal <span id="targetLapView">2</span>Laps</div>
+        <div id="totalTime" class="timeValue">00.000</div>
+      </div>
     </div>
 
     <div class="videoBox">
@@ -136,7 +139,7 @@
       </label>
     </div>
     <div class="note">
-      V0.0.14は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
+      V0.0.15は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
     </div>
   </section>
 
@@ -188,6 +191,7 @@
   const lap1Time = document.getElementById("lap1Time");
   const lap2Time = document.getElementById("lap2Time");
   const totalTime = document.getElementById("totalTime");
+  const targetLapView = document.getElementById("targetLapView");
   const status = document.getElementById("status");
   const motionSpan = document.getElementById("motion");
   const resultsList = document.getElementById("resultsList");
@@ -301,6 +305,11 @@
     saveResults(results.slice(0,300));
     renderResults();
     renderRecentResults();
+  }
+
+
+  function updateTargetLapDisplay(){
+    targetLapView.textContent = String(Math.max(1, Number(targetLapsInput.value || 2)));
   }
 
   function updateSummary(){
@@ -627,9 +636,11 @@
   lineDirectionInput.addEventListener("change",()=>{prevData=null;});
   linePosInput.addEventListener("input",()=>{prevData=null;});
   bandSizeInput.addEventListener("input",()=>{prevData=null;});
+  targetLapsInput.addEventListener("input", updateTargetLapDisplay);
 
   renderResults();
   renderRecentResults();
+  updateTargetLapDisplay();
   updateSummary();
   updateState();
 })();
