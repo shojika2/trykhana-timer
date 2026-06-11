@@ -245,7 +245,7 @@
 <div class="wrap">
   <div class="brand">
     <h1>Trykhana Timer</h1>
-    <div class="version">V0.0.10</div>
+    <div class="version">V0.0.11</div>
   </div>
 
   <div class="tabs">
@@ -322,6 +322,7 @@
           <option value="no">OFF</option>
         </select>
       </label>
+      <button id="voiceTest" class="good">読み上げテスト</button>
     </div>
     <div class="note">
       カメラ停止で映像入力と解析ループを停止します。複数台走行で先頭車だけを拾う場合は、再検出禁止を後続車が通過し終わる程度まで長めにします。
@@ -362,6 +363,7 @@
   const refreshResultsBtn = document.getElementById("refreshResults");
   const exportAllCsvBtn = document.getElementById("exportAllCsv");
   const clearResultsBtn = document.getElementById("clearResults");
+  const voiceTestBtn = document.getElementById("voiceTest");
 
   const lineDirectionInput = document.getElementById("lineDirection");
   const linePosInput = document.getElementById("linePos");
@@ -445,13 +447,18 @@
     beep(740, 0.10, 0, 0.075);
   }
 
+  let speechReady = false;
+
   function ensureSpeech() {
     try {
-      if (!("speechSynthesis" in window)) return;
-      // iPhone Safari対策：ユーザー操作後に音声一覧を一度触っておく。
-      window.speechSynthesis.getVoices();
+      if (!("speechSynthesis" in window)) return false;
+      const synth = window.speechSynthesis;
+      synth.getVoices();
+      speechReady = true;
+      return true;
     } catch (e) {
       console.warn("Speech unavailable", e);
+      return false;
     }
   }
 
@@ -461,41 +468,74 @@
     return `${whole}秒${String(milli).padStart(3, "0")}`;
   }
 
-  function speakGoalTime(sec) {
-    if (voiceReadoutInput.value !== "yes") return;
-    if (!("speechSynthesis" in window)) return;
+  function makeUtterance(text) {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "ja-JP";
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const jaVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("ja"));
+    if (jaVoice) utter.voice = jaVoice;
+    return utter;
+  }
+
+  function speakText(text, retry = true) {
+    if (!("speechSynthesis" in window)) {
+      status.textContent = "このブラウザは音声読み上げに未対応です";
+      return false;
+    }
 
     try {
-      const text = formatTimeForSpeech(sec);
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "ja-JP";
-      utter.rate = 1.05;
-      utter.pitch = 1.0;
-      utter.volume = 1.0;
+      const synth = window.speechSynthesis;
+      synth.cancel();
 
-      const voices = window.speechSynthesis.getVoices();
-      const jaVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("ja"));
-      if (jaVoice) utter.voice = jaVoice;
+      const doSpeak = () => {
+        const utter = makeUtterance(text);
+        synth.speak(utter);
+      };
 
-      // ピピッ音の後に読ませる。
-      setTimeout(() => window.speechSynthesis.speak(utter), 360);
+      const voices = synth.getVoices();
+      if (voices.length === 0 && retry) {
+        // iOS Safariでは音声一覧の読み込みが遅れることがある。
+        setTimeout(() => speakText(text, false), 250);
+        return true;
+      }
+
+      doSpeak();
+
+      // iOS Safariで初回だけ無音になる場合の軽い再投入。
+      if (retry) {
+        setTimeout(() => {
+          if (!synth.speaking && !synth.pending) speakText(text, false);
+        }, 350);
+      }
+      return true;
     } catch (e) {
       console.warn("Speech failed", e);
+      status.textContent = "音声読み上げに失敗しました";
+      return false;
     }
   }
 
+  function testSpeech() {
+    ensureAudio();
+    ensureSpeech();
+    soundLineCross();
+    speakText("13秒582");
+    status.textContent = "読み上げテストを実行しました";
+  }
 
-  function fmt(sec) {
-    if (!isFinite(sec)) return "00.000";
-    return sec.toFixed(3).padStart(6, "0");
+  function speakGoalTime(sec) {
+    if (voiceReadoutInput.value !== "yes") return;
+    if (!speechReady) ensureSpeech();
+
+    const text = formatTimeForSpeech(sec);
+    // ピピッ音の後に読ませる。iOSで遅延が必要な場合がある。
+    setTimeout(() => speakText(text), 420);
   }
-  function blankFmt(sec) { return Number.isFinite(sec) ? fmt(sec) : "--.---"; }
-  function fmtDateTime(iso) {
-    const d = new Date(iso);
-    const pad = n => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  }
+
 
   function updateState() {
     cameraToggleBtn.classList.remove("primary", "danger");
@@ -960,6 +1000,13 @@
   refreshResultsBtn.addEventListener("click", renderResults);
   exportAllCsvBtn.addEventListener("click", () => downloadText("trykhana-results.csv", allResultsCsv()));
   clearResultsBtn.addEventListener("click", clearResults);
+  voiceTestBtn.addEventListener("click", testSpeech);
+
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      try { window.speechSynthesis.getVoices(); } catch {}
+    };
+  }
 
   lineDirectionInput.addEventListener("change", () => { prevData = null; });
   linePosInput.addEventListener("input", () => { prevData = null; });
