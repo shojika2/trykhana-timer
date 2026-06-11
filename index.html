@@ -29,7 +29,7 @@
   .version { color: #aaa; font-size: 11px; }
   .tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 6px;
     margin: 6px 0;
   }
@@ -52,11 +52,7 @@
     padding: 7px 6px;
     min-width: 0;
   }
-  .timeLabel {
-    color: #aaa;
-    font-size: 11px;
-    line-height: 1.1;
-  }
+  .timeLabel { color: #aaa; font-size: 11px; line-height: 1.1; }
   .timeValue {
     font-size: 20px;
     font-weight: 800;
@@ -64,9 +60,7 @@
     margin-top: 2px;
     white-space: nowrap;
   }
-  .timeBox.total .timeValue {
-    font-size: 23px;
-  }
+  .timeBox.total .timeValue { font-size: 23px; }
 
   .videoBox {
     position: relative;
@@ -91,17 +85,17 @@
     pointer-events: none;
   }
 
+  .controlPanel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 6px 0;
+  }
   .settingsPanel {
     display: grid;
     grid-template-columns: repeat(2, minmax(0,1fr));
-    gap: 6px;
-    margin-top: 6px;
-  }
-  .controlPanel {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    gap: 6px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 8px;
   }
   button, input, select {
     font-size: 14px;
@@ -120,10 +114,7 @@
     flex-direction: column;
     gap: 3px;
   }
-  input[type="range"] {
-    padding-left: 0;
-    padding-right: 0;
-  }
+  input[type="range"] { padding-left: 0; padding-right: 0; }
   .readout {
     margin-top: 6px;
     padding: 8px;
@@ -131,17 +122,8 @@
     border-radius: 10px;
     font-variant-numeric: tabular-nums;
   }
-  .mainTime {
-    font-size: 30px;
-    line-height: 1.05;
-    font-weight: 800;
-  }
-  .sub {
-    color: #bbb;
-    margin-top: 3px;
-    line-height: 1.25;
-    font-size: 12px;
-  }
+  .mainTime { font-size: 30px; line-height: 1.05; font-weight: 800; }
+  .sub { color: #bbb; margin-top: 3px; line-height: 1.25; font-size: 12px; }
   table {
     width: 100%;
     border-collapse: collapse;
@@ -156,12 +138,7 @@
     vertical-align: top;
   }
   th:first-child, td:first-child { text-align: left; }
-  .note {
-    color: #bbb;
-    font-size: 12px;
-    line-height: 1.4;
-    margin-top: 6px;
-  }
+  .note { color: #bbb; font-size: 12px; line-height: 1.4; margin-top: 8px; }
   .resultCard {
     background: #1c1c1c;
     border: 1px solid #333;
@@ -198,23 +175,14 @@
   @media (max-width: 430px) {
     body { padding: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
     h1 { font-size: 17px; }
-    .tabs button { padding: 7px; }
+    .tabs button { padding: 7px 4px; font-size: 13px; }
     .videoBox, video { max-height: 29vh; }
     .timeValue { font-size: 18px; }
     .timeBox.total .timeValue { font-size: 21px; }
     .mainTime { font-size: 26px; }
-    .settingsPanel { grid-template-columns: 1fr 1fr; }
-    button, input, select { font-size: 13px; padding: 7px; }
-    label { font-size: 11px; }
-  }
-
-  @media (max-width: 380px) {
-    .videoBox, video { max-height: 25vh; }
     .settingsPanel { grid-template-columns: 1fr; }
-    .lapSummary { gap: 4px; }
-    .timeBox { padding: 6px 4px; }
-    .timeValue { font-size: 16px; }
-    .timeBox.total .timeValue { font-size: 18px; }
+    button, input, select { font-size: 13px; padding: 7px; }
+    label { font-size: 12px; }
   }
 </style>
 </head>
@@ -227,23 +195,15 @@
 
   <div class="tabs">
     <button id="timerTab" class="tabBtn active">計測</button>
+    <button id="settingsTab" class="tabBtn">設定</button>
     <button id="resultsTab" class="tabBtn">計測結果</button>
   </div>
 
   <section id="timerPage" class="page active">
     <div class="lapSummary">
-      <div class="timeBox">
-        <div class="timeLabel">1 Lap</div>
-        <div id="lap1Time" class="timeValue">--.---</div>
-      </div>
-      <div class="timeBox">
-        <div class="timeLabel">2 Lap</div>
-        <div id="lap2Time" class="timeValue">--.---</div>
-      </div>
-      <div class="timeBox total">
-        <div class="timeLabel">Total</div>
-        <div id="totalTime" class="timeValue">00.000</div>
-      </div>
+      <div class="timeBox"><div class="timeLabel">1 Lap</div><div id="lap1Time" class="timeValue">--.---</div></div>
+      <div class="timeBox"><div class="timeLabel">2 Lap</div><div id="lap2Time" class="timeValue">--.---</div></div>
+      <div class="timeBox total"><div class="timeLabel">Total</div><div id="totalTime" class="timeValue">00.000</div></div>
     </div>
 
     <div class="videoBox">
@@ -257,6 +217,19 @@
       <div class="sub">変化量: <span id="motion">0</span></div>
     </div>
 
+    <div class="controlPanel">
+      <button id="startCam" class="primary">カメラ開始</button>
+      <button id="armReset" class="primary">計測待機</button>
+    </div>
+
+    <table>
+      <thead><tr><th>通過</th><th>時刻</th><th>区間</th></tr></thead>
+      <tbody id="laps"></tbody>
+    </table>
+  </section>
+
+  <section id="settingsPage" class="page">
+    <h2>設定</h2>
     <div class="settingsPanel">
       <label>検出ライン方向
         <select id="lineDirection">
@@ -277,10 +250,10 @@
         <input id="targetLaps" type="number" value="2" min="1" max="10" step="1">
       </label>
       <label>再検出禁止 秒
-        <input id="cooldownSec" type="number" value="0.9" min="0.1" step="0.1">
+        <input id="cooldownSec" type="number" value="5" min="0.1" step="0.1">
       </label>
       <label>次走待機 秒
-        <input id="autoRearmDelaySec" type="number" value="2.5" min="0.5" step="0.1">
+        <input id="autoRearmDelaySec" type="number" value="5" min="0.5" step="0.1">
       </label>
       <label>先頭車のみ判定
         <select id="leadOnly">
@@ -289,19 +262,10 @@
         </select>
       </label>
     </div>
-
-    <div class="controlPanel">
-      <button id="startCam" class="primary">カメラ開始</button>
-      <button id="arm" class="primary">計測待機</button>
-      <button id="reset" class="danger">手動リセット</button>
+    <div class="note">
+      複数台走行で先頭車だけを拾う場合は、再検出禁止を後続車が通過し終わる程度まで長めにします。
+      初期値は再検出禁止5秒、次走待機5秒です。
     </div>
-
-    <table>
-      <thead>
-        <tr><th>通過</th><th>時刻</th><th>区間</th></tr>
-      </thead>
-      <tbody id="laps"></tbody>
-    </table>
   </section>
 
   <section id="resultsPage" class="page">
@@ -310,7 +274,6 @@
       <button id="exportAllCsv">CSV出力</button>
       <button id="clearResults" class="danger">全結果削除</button>
     </div>
-
     <h2>計測結果リスト</h2>
     <div id="resultsList"></div>
   </section>
@@ -325,13 +288,14 @@
   const octx = overlay.getContext("2d");
 
   const timerTab = document.getElementById("timerTab");
+  const settingsTab = document.getElementById("settingsTab");
   const resultsTab = document.getElementById("resultsTab");
   const timerPage = document.getElementById("timerPage");
+  const settingsPage = document.getElementById("settingsPage");
   const resultsPage = document.getElementById("resultsPage");
 
   const startCamBtn = document.getElementById("startCam");
-  const armBtn = document.getElementById("arm");
-  const resetBtn = document.getElementById("reset");
+  const armResetBtn = document.getElementById("armReset");
 
   const refreshResultsBtn = document.getElementById("refreshResults");
   const exportAllCsvBtn = document.getElementById("exportAllCsv");
@@ -373,35 +337,40 @@
     if (!isFinite(sec)) return "00.000";
     return sec.toFixed(3).padStart(6, "0");
   }
-
-  function blankFmt(sec) {
-    return Number.isFinite(sec) ? fmt(sec) : "--.---";
-  }
-
+  function blankFmt(sec) { return Number.isFinite(sec) ? fmt(sec) : "--.---"; }
   function fmtDateTime(iso) {
     const d = new Date(iso);
     const pad = n => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
+  function updateArmResetButton() {
+    if (armed || running) {
+      armResetBtn.textContent = "手動リセット";
+      armResetBtn.classList.remove("primary");
+      armResetBtn.classList.add("danger");
+    } else {
+      armResetBtn.textContent = "計測待機";
+      armResetBtn.classList.remove("danger");
+      armResetBtn.classList.add("primary");
+    }
+  }
+
   function switchPage(page) {
-    const isTimer = page === "timer";
-    timerTab.classList.toggle("active", isTimer);
-    resultsTab.classList.toggle("active", !isTimer);
-    timerPage.classList.toggle("active", isTimer);
-    resultsPage.classList.toggle("active", !isTimer);
-    if (!isTimer) renderResults();
+    timerTab.classList.toggle("active", page === "timer");
+    settingsTab.classList.toggle("active", page === "settings");
+    resultsTab.classList.toggle("active", page === "results");
+    timerPage.classList.toggle("active", page === "timer");
+    settingsPage.classList.toggle("active", page === "settings");
+    resultsPage.classList.toggle("active", page === "results");
+    if (page === "results") renderResults();
   }
 
   function loadResults() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
     catch { return []; }
   }
-
-  function saveResults(results) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(results));
-  }
-
+  function saveResults(results) { localStorage.setItem(STORAGE_KEY, JSON.stringify(results)); }
   function addResult(result) {
     const results = loadResults();
     results.unshift(result);
@@ -431,7 +400,7 @@
       });
       video.srcObject = stream;
       await video.play();
-      status.textContent = "カメラ起動。ラインを合わせて計測待機してください";
+      status.textContent = "カメラ起動。計測待機を押してください";
       if (!loopStarted) {
         loopStarted = true;
         loop();
@@ -461,8 +430,8 @@
     mainTime.textContent = "00.000";
     status.textContent = "手動リセット済み";
     lapsBody.innerHTML = "";
-    armBtn.textContent = "計測待機";
     updateSummary();
+    updateArmResetButton();
   }
 
   function prepareNextRun(message = "次の走行を待機中") {
@@ -478,11 +447,15 @@
     mainTime.textContent = "00.000";
     status.textContent = message;
     lapsBody.innerHTML = "";
-    armBtn.textContent = "待機中";
     updateSummary();
+    updateArmResetButton();
   }
 
-  function arm() {
+  function armOrReset() {
+    if (armed || running) {
+      resetManual();
+      return;
+    }
     if (!video.srcObject) {
       status.textContent = "先にカメラを開始してください";
       return;
@@ -503,6 +476,7 @@
       status.textContent = "スタート検出";
       renderRows();
       updateSummary();
+      updateArmResetButton();
       return;
     }
 
@@ -538,7 +512,9 @@
         linePos: Number(linePosInput.value),
         bandSize: Number(bandSizeInput.value),
         threshold: Number(thresholdInput.value),
-        cooldownSec: Number(cooldownSecInput.value)
+        cooldownSec: Number(cooldownSecInput.value),
+        autoRearmDelaySec: Number(autoRearmDelaySecInput.value),
+        leadOnly: leadOnlyInput.value
       }
     };
 
@@ -550,8 +526,9 @@
     status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
     renderRows();
     updateSummary();
+    updateArmResetButton();
 
-    const delay = Math.max(500, Number(autoRearmDelaySecInput.value || 2.5) * 1000);
+    const delay = Math.max(500, Number(autoRearmDelaySecInput.value || 5) * 1000);
     autoRearmTimer = setTimeout(() => {
       if (video.srcObject) prepareNextRun("自動で次の走行を待機中");
     }, delay);
@@ -568,19 +545,22 @@
   }
 
   function allResultsCsv() {
-    const rows = [["finish_time","start_time","total_sec","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec"]];
+    const rows = [["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec","auto_rearm_delay_sec","lead_only"]];
     loadResults().forEach(r => {
       rows.push([
         r.finishTime || "",
         r.startTime || "",
         r.totalSec ?? "",
+        r.targetLaps ?? "",
         r.splits?.[0] ?? "",
         r.splits?.[1] ?? "",
         r.settings?.lineDirection ?? "",
         r.settings?.linePos ?? "",
         r.settings?.bandSize ?? "",
         r.settings?.threshold ?? "",
-        r.settings?.cooldownSec ?? ""
+        r.settings?.cooldownSec ?? "",
+        r.settings?.autoRearmDelaySec ?? "",
+        r.settings?.leadOnly ?? ""
       ]);
     });
     return rows.map(row => row.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
@@ -598,20 +578,16 @@
   function renderResults() {
     const results = loadResults();
     resultsList.innerHTML = "";
-
     if (results.length === 0) {
       resultsList.innerHTML = `<div class="note">まだ計測結果がありません。</div>`;
       return;
     }
-
     const best = Math.min(...results.map(x => Number(x.totalSec)).filter(Number.isFinite));
-
     results.forEach((r, idx) => {
       const div = document.createElement("div");
       div.className = "resultCard";
       const isBest = Number(r.totalSec) === best;
       const splitsText = (r.splits || []).map((s, i) => `Lap ${i+1}: ${fmt(s)}`).join(" / ");
-
       div.innerHTML = `
         <div class="resultHead">
           <div>
@@ -623,8 +599,8 @@
         </div>
         <div class="smallGrid">
           <div>スタート：${r.startTime ? fmtDateTime(r.startTime) : "-"}</div>
+          <div>ラップ数：${r.targetLaps ?? "-"}</div>
           <div>検出：${r.settings?.lineDirection === "vertical" ? "縦ライン" : "横ライン"}</div>
-          <div>感度：${r.settings?.threshold ?? "-"}</div>
         </div>
         <div class="sub">${splitsText}</div>
       `;
@@ -642,7 +618,6 @@
     const dir = lineDirectionInput.value;
     const posPct = Number(linePosInput.value) / 100;
     const bandPct = Number(bandSizeInput.value) / 100;
-
     if (dir === "vertical") {
       const bandW = Math.max(4, Math.floor(vw * bandPct));
       const x = Math.max(0, Math.min(vw - bandW, Math.floor(vw * posPct - bandW / 2)));
@@ -720,7 +695,7 @@
     drawOverlay(motion);
 
     const threshold = Number(thresholdInput.value);
-    const baseCooldown = Number(cooldownSecInput.value || 0.9) * 1000;
+    const baseCooldown = Number(cooldownSecInput.value || 5) * 1000;
     const cooldown = leadOnlyInput.value === "yes" ? baseCooldown : Math.min(baseCooldown, 500);
     const canDetect = ts - lastDetectTs > cooldown;
 
@@ -737,10 +712,10 @@
   }
 
   startCamBtn.addEventListener("click", startCamera);
-  armBtn.addEventListener("click", arm);
-  resetBtn.addEventListener("click", resetManual);
+  armResetBtn.addEventListener("click", armOrReset);
 
   timerTab.addEventListener("click", () => switchPage("timer"));
+  settingsTab.addEventListener("click", () => switchPage("settings"));
   resultsTab.addEventListener("click", () => switchPage("results"));
   refreshResultsBtn.addEventListener("click", renderResults);
   exportAllCsvBtn.addEventListener("click", () => downloadText("trykhana-results.csv", allResultsCsv()));
@@ -752,6 +727,7 @@
 
   renderResults();
   updateSummary();
+  updateArmResetButton();
 })();
 </script>
 </body>
