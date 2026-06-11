@@ -245,7 +245,7 @@
 <div class="wrap">
   <div class="brand">
     <h1>Trykhana Timer</h1>
-    <div class="version">Camera Prototype</div>
+    <div class="version">V0.0.10</div>
   </div>
 
   <div class="tabs">
@@ -438,6 +438,11 @@
     ensureAudio();
     beep(1040, 0.11, 0, 0.09);
     beep(1040, 0.11, 0.16, 0.09);
+  }
+
+  function soundLineCross() {
+    ensureAudio();
+    beep(740, 0.10, 0, 0.075);
   }
 
   function ensureSpeech() {
@@ -680,6 +685,7 @@
 
   function addPass(ts) {
     const targetLaps = Math.max(1, Number(targetLapsInput.value || 2));
+    soundLineCross();
     const nowSec = (ts - startTs) / 1000;
 
     if (!running) {
