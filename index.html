@@ -5,248 +5,67 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Trykhana Timer</title>
 <style>
-  :root {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    color: #f5f5f5;
-    background: #111;
-  }
-  body {
-    margin: 0;
-    padding: 8px;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
-    background: #111;
-  }
-  h1 { font-size: 18px; margin: 0; }
-  h2 { font-size: 15px; margin: 8px 0 4px; }
-  .wrap { max-width: 900px; margin: 0 auto; }
-  .brand {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-  .version { color: #aaa; font-size: 11px; }
-  .tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 6px;
-    margin: 6px 0;
-  }
-  .tabBtn { background: #242424; }
-  .tabBtn.active { background: #0b63ce; }
-  .page { display: none; }
-  .page.active { display: block; }
-
-  .lapSummary {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1.1fr;
-    gap: 6px;
-    margin: 6px 0;
-    font-variant-numeric: tabular-nums;
-  }
-  .timeBox {
-    background: #1c1c1c;
-    border: 1px solid #333;
-    border-radius: 10px;
-    padding: 7px 6px;
-    min-width: 0;
-  }
-  .timeLabel { color: #aaa; font-size: 11px; line-height: 1.1; }
-  .timeValue {
-    font-size: 20px;
-    font-weight: 800;
-    line-height: 1.15;
-    margin-top: 2px;
-    white-space: nowrap;
-  }
-  .timeBox.total .timeValue { font-size: 23px; }
-
-  .videoBox {
-    position: relative;
-    width: 100%;
-    height: clamp(230px, 43vh, 390px);
-    background: #000;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  canvas.overlay {
-    width: 100%;
-    height: 100%;
-    display: block;
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-  .cameraOff {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    color: #999;
-    background: #050505;
-    font-weight: 700;
-  }
-
-  .controlPanel {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    margin: 6px 0;
-  }
-  .settingsPanel {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0,1fr));
-    gap: 8px;
-    margin-top: 8px;
-  }
-  button, input, select {
-    font-size: 14px;
-    padding: 8px;
-    border-radius: 9px;
-    border: 1px solid #444;
-  }
-  button { color: #fff; background: #333; }
-  button:disabled { opacity: 0.45; filter: grayscale(1); }
-  button.primary { background: #0b63ce; }
-  button.danger { background: #9b1c1c; }
-  button.good { background: #146b2e; }
-  button.warning { background: #a66a00; }
-  .stateBanner {
-    margin-top: 6px;
-    padding: 7px 8px;
-    border-radius: 10px;
-    font-size: 18px;
-    font-weight: 800;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-    background: #1c1c1c;
-    border: 1px solid #333;
-  }
-  .stateCameraOff { background: #333; }
-  .stateCameraReady { background: #146b2e; }
-  .stateStopped { background: #0b3d78; }
-  .stateArmed { background: #a66a00; }
-  .stateRunning { background: #9b1c1c; }
-
-  label {
-    font-size: 12px;
-    color: #ddd;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-  input[type="range"] { padding-left: 0; padding-right: 0; }
-  .readout {
-    margin-top: 6px;
-    padding: 8px;
-    background: #1c1c1c;
-    border-radius: 10px;
-    font-variant-numeric: tabular-nums;
-  }
-  .mainTime { font-size: 30px; line-height: 1.05; font-weight: 800; }
-  .sub { color: #bbb; margin-top: 3px; line-height: 1.25; font-size: 12px; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 6px;
-    font-variant-numeric: tabular-nums;
-    font-size: 12px;
-  }
-  th, td {
-    border-bottom: 1px solid #333;
-    padding: 5px 3px;
-    text-align: right;
-    vertical-align: top;
-  }
-  th:first-child, td:first-child { text-align: left; }
-  .note { color: #bbb; font-size: 12px; line-height: 1.4; margin-top: 8px; }
-
-  .recentResults {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    margin-top: 6px;
-  }
-  .recentMini {
-    background: #1c1c1c;
-    border: 1px solid #333;
-    border-radius: 10px;
-    padding: 7px 6px;
-    font-variant-numeric: tabular-nums;
-    min-height: 48px;
-  }
-  .recentMini .miniHead { color: #aaa; font-size: 11px; line-height: 1.1; }
-  .recentMini .miniTime { font-size: 20px; font-weight: 800; line-height: 1.15; margin-top: 2px; }
-  .recentMini .miniSub {
-    color: #bbb;
-    font-size: 11px;
-    line-height: 1.2;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .resultCard {
-    background: #1c1c1c;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 10px;
-    margin-top: 8px;
-    font-variant-numeric: tabular-nums;
-  }
-  .resultHead {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    align-items: baseline;
-  }
-  .resultTime { font-size: 22px; font-weight: 700; }
-  .muted { color: #aaa; font-size: 13px; }
-  .smallGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    margin-top: 8px;
-    color: #ccc;
-    font-size: 13px;
-  }
-  .pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: #333;
-    color: #ddd;
-    font-size: 12px;
-  }
-
-  @media (max-width: 430px) {
-    body { padding: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
-    h1 { font-size: 17px; }
-    .tabs button { padding: 7px 4px; font-size: 13px; }
-    .videoBox { height: clamp(250px, 45vh, 410px); }
-    .timeValue { font-size: 18px; }
-    .timeBox.total .timeValue { font-size: 21px; }
-    .mainTime { font-size: 26px; }
-    .settingsPanel { grid-template-columns: 1fr; }
-    button, input, select { font-size: 13px; padding: 7px; }
-    label { font-size: 12px; }
+  :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f5f5f5;background:#111}
+  body{margin:0;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:#111}
+  h1{font-size:18px;margin:0}
+  h2{font-size:15px;margin:8px 0 4px}
+  .wrap{max-width:900px;margin:0 auto}
+  .brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .version{color:#aaa;font-size:11px}
+  .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:6px 0}
+  .tabBtn{background:#242424}
+  .tabBtn.active{background:#0b63ce}
+  .page{display:none}.page.active{display:block}
+  .lapSummary{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:6px;margin:6px 0;font-variant-numeric:tabular-nums}
+  .timeBox{background:#1c1c1c;border:1px solid #333;border-radius:10px;padding:7px 6px;min-width:0}
+  .timeLabel{color:#aaa;font-size:11px;line-height:1.1}
+  .timeValue{font-size:20px;font-weight:800;line-height:1.15;margin-top:2px;white-space:nowrap}
+  .timeBox.total .timeValue{font-size:23px}
+  .videoBox{position:relative;width:100%;height:clamp(230px,43vh,390px);background:#000;border-radius:10px;overflow:hidden}
+  video{width:100%;height:100%;object-fit:cover;display:block}
+  canvas.overlay{width:100%;height:100%;display:block;position:absolute;inset:0;pointer-events:none}
+  .cameraOff{position:absolute;inset:0;display:grid;place-items:center;color:#999;background:#050505;font-weight:700}
+  .controlPanel{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}
+  .settingsPanel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+  button,input,select{font-size:14px;padding:8px;border-radius:9px;border:1px solid #444}
+  button{color:#fff;background:#333}
+  button:disabled{opacity:.45;filter:grayscale(1)}
+  button.primary{background:#0b63ce}
+  button.danger{background:#9b1c1c}
+  button.good{background:#146b2e}
+  button.warning{background:#a66a00}
+  .stateBanner{margin-top:6px;padding:7px 8px;border-radius:10px;font-size:18px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;background:#1c1c1c;border:1px solid #333}
+  .stateCameraOff{background:#333}.stateCameraReady{background:#146b2e}.stateArmed{background:#a66a00}.stateRunning{background:#9b1c1c}
+  label{font-size:12px;color:#ddd;display:flex;flex-direction:column;gap:3px}
+  input[type=range]{padding-left:0;padding-right:0}
+  .readout{margin-top:6px;padding:8px;background:#1c1c1c;border-radius:10px;font-variant-numeric:tabular-nums}
+  .mainTime{font-size:30px;line-height:1.05;font-weight:800}
+  .sub{color:#bbb;margin-top:3px;line-height:1.25;font-size:12px}
+  .note{color:#bbb;font-size:12px;line-height:1.4;margin-top:8px}
+  .recentResults{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  .recentMini{background:#1c1c1c;border:1px solid #333;border-radius:10px;padding:7px 6px;font-variant-numeric:tabular-nums;min-height:48px}
+  .miniHead{color:#aaa;font-size:11px;line-height:1.1}
+  .miniTime{font-size:20px;font-weight:800;line-height:1.15;margin-top:2px}
+  .miniSub{color:#bbb;font-size:11px;line-height:1.2;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .resultCard{background:#1c1c1c;border:1px solid #333;border-radius:12px;padding:10px;margin-top:8px;font-variant-numeric:tabular-nums}
+  .resultHead{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .resultTime{font-size:22px;font-weight:700}
+  .muted{color:#aaa;font-size:13px}
+  .smallGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;color:#ccc;font-size:13px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#333;color:#ddd;font-size:12px}
+  @media(max-width:430px){
+    body{padding:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+    h1{font-size:17px}.tabs button{padding:7px 4px;font-size:13px}
+    .videoBox{height:clamp(250px,45vh,410px)}
+    .timeValue{font-size:18px}.timeBox.total .timeValue{font-size:21px}
+    .mainTime{font-size:26px}.settingsPanel{grid-template-columns:1fr}
+    button,input,select{font-size:13px;padding:7px}label{font-size:12px}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="brand">
-    <h1>Trykhana Timer</h1>
-    <div class="version">Camera Prototype</div>
-  </div>
+  <div class="brand"><h1>Trykhana Timer</h1><div class="version">V0.0.14</div></div>
 
   <div class="tabs">
     <button id="timerTab" class="tabBtn active">計測</button>
@@ -279,7 +98,6 @@
     </div>
 
     <div id="stateBanner" class="stateBanner stateCameraOff">カメラ停止</div>
-
     <div class="recentResults" id="recentResults"></div>
   </section>
 
@@ -318,7 +136,7 @@
       </label>
     </div>
     <div class="note">
-      カメラ停止で映像入力と解析ループを停止します。複数台走行で先頭車だけを拾う場合は、再検出禁止を後続車が通過し終わる程度まで長めにします。
+      V0.0.14は音声読み上げを完全削除した安定版です。計測開始時も差分基準フレームを捨てないため、最初のライン通過で即スタートします。
     </div>
   </section>
 
@@ -381,6 +199,7 @@
   let cameraOn = false;
   let stream = null;
   let rafId = null;
+  let audioCtx = null;
 
   let armed = false;
   let running = false;
@@ -392,520 +211,422 @@
   let passTimes = [];
   let autoRearmTimer = null;
 
-  let audioCtx = null;
-
-  function ensureAudio() {
-    try {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume();
-    } catch (e) {
-      console.warn("Audio unavailable", e);
-    }
-  }
-
-  function beep(freq = 880, duration = 0.18, delay = 0, gainValue = 0.08) {
-    if (!audioCtx) return;
-    const t0 = audioCtx.currentTime + delay;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(freq, t0);
-
-    gain.gain.setValueAtTime(0.0001, t0);
-    gain.gain.exponentialRampToValueAtTime(gainValue, t0 + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(t0);
-    osc.stop(t0 + duration + 0.02);
-  }
-
-  function soundArmed() {
-    ensureAudio();
-    beep(880, 0.45, 0, 0.09);
-  }
-
-  function soundGoal() {
-    ensureAudio();
-    beep(1040, 0.11, 0, 0.09);
-    beep(1040, 0.11, 0.16, 0.09);
-  }
-
-
-  function fmt(sec) {
-    if (!isFinite(sec)) return "00.000";
-    return sec.toFixed(3).padStart(6, "0");
-  }
-  function blankFmt(sec) { return Number.isFinite(sec) ? fmt(sec) : "--.---"; }
-  function fmtDateTime(iso) {
-    const d = new Date(iso);
-    const pad = n => String(n).padStart(2, "0");
+  function fmt(sec){ if(!isFinite(sec)) return "00.000"; return sec.toFixed(3).padStart(6,"0"); }
+  function blankFmt(sec){ return Number.isFinite(sec) ? fmt(sec) : "--.---"; }
+  function fmtDateTime(iso){
+    const d=new Date(iso), pad=n=>String(n).padStart(2,"0");
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
-  function updateState() {
-    cameraToggleBtn.classList.remove("primary", "danger");
-    cameraToggleBtn.disabled = running;
-    measureToggleBtn.classList.remove("primary", "warning", "danger");
-    stateBanner.classList.remove("stateCameraOff", "stateCameraReady", "stateStopped", "stateArmed", "stateRunning");
+  function ensureAudio(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state === "suspended") audioCtx.resume();
+    }catch(e){ console.warn(e); }
+  }
+  function beep(freq=740,duration=0.08,delay=0,gainValue=0.06){
+    if(!audioCtx) return;
+    const t0=audioCtx.currentTime+delay;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type="sine";
+    osc.frequency.setValueAtTime(freq,t0);
+    gain.gain.setValueAtTime(0.0001,t0);
+    gain.gain.exponentialRampToValueAtTime(gainValue,t0+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001,t0+duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0+duration+0.02);
+  }
+  function soundLineCross(){ beep(740,0.08,0,0.06); }
+  function soundArmed(){ beep(880,0.35,0,0.08); }
+  function soundGoal(){ beep(1040,0.10,0,0.08); beep(1040,0.10,0.15,0.08); }
 
-    if (!cameraOn) {
-      cameraToggleBtn.textContent = "カメラ開始";
+  function updateState(){
+    cameraToggleBtn.classList.remove("primary","danger");
+    measureToggleBtn.classList.remove("primary","danger");
+    stateBanner.classList.remove("stateCameraOff","stateCameraReady","stateArmed","stateRunning");
+
+    if(!cameraOn){
+      cameraToggleBtn.textContent="カメラ開始";
+      cameraToggleBtn.disabled=false;
       cameraToggleBtn.classList.add("primary");
-      measureToggleBtn.textContent = "計測開始";
-      measureToggleBtn.disabled = true;
+      measureToggleBtn.textContent="計測開始";
+      measureToggleBtn.disabled=true;
       measureToggleBtn.classList.add("primary");
-      stateBanner.textContent = "カメラ停止";
+      stateBanner.textContent="カメラ停止";
       stateBanner.classList.add("stateCameraOff");
-      cameraOffLabel.style.display = "grid";
+      cameraOffLabel.style.display="grid";
       return;
     }
 
-    cameraToggleBtn.textContent = "カメラ停止";
+    cameraToggleBtn.textContent="カメラ停止";
+    cameraToggleBtn.disabled=running;
     cameraToggleBtn.classList.add("danger");
-    measureToggleBtn.disabled = false;
-    cameraOffLabel.style.display = "none";
+    measureToggleBtn.disabled=false;
+    cameraOffLabel.style.display="none";
 
-    if (running) {
-      cameraToggleBtn.textContent = "カメラ停止";
-      measureToggleBtn.textContent = "計測停止";
+    if(running){
+      measureToggleBtn.textContent="計測停止";
       measureToggleBtn.classList.add("danger");
-      stateBanner.textContent = "計測中";
+      stateBanner.textContent="計測中";
       stateBanner.classList.add("stateRunning");
-    } else if (armed) {
-      measureToggleBtn.textContent = "計測停止";
+    }else if(armed){
+      measureToggleBtn.textContent="計測停止";
       measureToggleBtn.classList.add("danger");
-      stateBanner.textContent = "計測待機";
+      stateBanner.textContent="計測待機";
       stateBanner.classList.add("stateArmed");
-    } else {
-      measureToggleBtn.textContent = "計測開始";
+    }else{
+      measureToggleBtn.textContent="計測開始";
       measureToggleBtn.classList.add("primary");
-      stateBanner.textContent = "カメラ待機";
+      stateBanner.textContent="カメラ待機";
       stateBanner.classList.add("stateCameraReady");
     }
   }
 
-  function switchPage(page) {
-    timerTab.classList.toggle("active", page === "timer");
-    settingsTab.classList.toggle("active", page === "settings");
-    resultsTab.classList.toggle("active", page === "results");
-    timerPage.classList.toggle("active", page === "timer");
-    settingsPage.classList.toggle("active", page === "settings");
-    resultsPage.classList.toggle("active", page === "results");
-    if (page === "results") renderResults();
+  function switchPage(page){
+    timerTab.classList.toggle("active",page==="timer");
+    settingsTab.classList.toggle("active",page==="settings");
+    resultsTab.classList.toggle("active",page==="results");
+    timerPage.classList.toggle("active",page==="timer");
+    settingsPage.classList.toggle("active",page==="settings");
+    resultsPage.classList.toggle("active",page==="results");
+    if(page==="results") renderResults();
   }
 
-  function loadResults() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-    catch { return []; }
-  }
-  function saveResults(results) { localStorage.setItem(STORAGE_KEY, JSON.stringify(results)); }
-  function addResult(result) {
-    const results = loadResults();
+  function loadResults(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");}catch{return [];} }
+  function saveResults(results){ localStorage.setItem(STORAGE_KEY,JSON.stringify(results)); }
+  function addResult(result){
+    const results=loadResults();
     results.unshift(result);
-    saveResults(results.slice(0, 300));
+    saveResults(results.slice(0,300));
     renderResults();
     renderRecentResults();
   }
 
-  function updateSummary() {
-    const lap1 = passTimes.length > 1 ? passTimes[1] - passTimes[0] : NaN;
-    const lap2 = passTimes.length > 2 ? passTimes[2] - passTimes[1] : NaN;
-    const total = passTimes.length > 0 ? passTimes[passTimes.length - 1] : (running ? (performance.now() - startTs) / 1000 : 0);
-    lap1Time.textContent = blankFmt(lap1);
-    lap2Time.textContent = blankFmt(lap2);
-    totalTime.textContent = fmt(total);
+  function updateSummary(){
+    const lap1=passTimes.length>1 ? passTimes[1]-passTimes[0] : NaN;
+    const lap2=passTimes.length>2 ? passTimes[2]-passTimes[1] : NaN;
+    const total=passTimes.length>0 ? passTimes[passTimes.length-1] : (running ? (performance.now()-startTs)/1000 : 0);
+    lap1Time.textContent=blankFmt(lap1);
+    lap2Time.textContent=blankFmt(lap2);
+    totalTime.textContent=fmt(total);
   }
 
-  async function startCamera() {
+  async function startCamera(){
     ensureAudio();
-    try {
+    try{
       stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 60, min: 30 }
-        },
-        audio: false
+        video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:60,min:30}},
+        audio:false
       });
-      video.srcObject = stream;
+      video.srcObject=stream;
       await video.play();
-      cameraOn = true;
-      status.textContent = "カメラ起動。計測開始を押してください";
-      prevData = null;
+      cameraOn=true;
+      status.textContent="カメラ起動。計測開始を押してください";
+      prevData=null;
       updateState();
       startLoop();
-    } catch (e) {
-      status.textContent = "カメラを開始できません: " + e.message;
-      cameraOn = false;
+    }catch(e){
+      status.textContent="カメラを開始できません: "+e.message;
+      cameraOn=false;
       updateState();
     }
   }
 
-  function stopCamera() {
+  function stopCamera(){
     clearAutoRearm();
     stopMeasure("カメラ停止");
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      stream = null;
-    }
-    video.srcObject = null;
-    cameraOn = false;
-    prevData = null;
-    motionSpan.textContent = "0";
-    octx.clearRect(0, 0, overlay.width, overlay.height);
-    status.textContent = "カメラ停止中";
+    if(rafId!==null){ cancelAnimationFrame(rafId); rafId=null; }
+    if(stream){ stream.getTracks().forEach(track=>track.stop()); stream=null; }
+    video.srcObject=null;
+    cameraOn=false;
+    prevData=null;
+    motionSpan.textContent="0";
+    octx.clearRect(0,0,overlay.width,overlay.height);
+    status.textContent="カメラ停止中";
     updateState();
   }
 
-  function toggleCamera() {
-    if (cameraOn) stopCamera();
-    else startCamera();
+  function toggleCamera(){ cameraOn ? stopCamera() : startCamera(); }
+
+  function startLoop(){
+    if(rafId!==null) return;
+    rafId=requestAnimationFrame(loop);
   }
 
-  function startLoop() {
-    if (rafId !== null) return;
-    rafId = requestAnimationFrame(loop);
+  function clearAutoRearm(){
+    if(autoRearmTimer){ clearTimeout(autoRearmTimer); autoRearmTimer=null; }
   }
 
-  function clearAutoRearm() {
-    if (autoRearmTimer) {
-      clearTimeout(autoRearmTimer);
-      autoRearmTimer = null;
-    }
-  }
-
-  function stopMeasure(message = "計測停止") {
+  function stopMeasure(message="計測停止"){
     clearAutoRearm();
-    armed = false;
-    running = false;
-    finished = false;
-    startTs = 0;
-    startWallTime = null;
-    lastDetectTs = -Infinity;
-    prevData = null;
-    passTimes = [];
-    mainTime.textContent = "00.000";
-    status.textContent = message;
+    armed=false; running=false; finished=false;
+    startTs=0; startWallTime=null; lastDetectTs=-Infinity;
+    // prevDataは消さない。ここが重要。消すと次の初回通過を取り逃がしやすい。
+    passTimes=[];
+    mainTime.textContent="00.000";
+    status.textContent=message;
+    updateSummary();
+    updateState();
+  }
+
+  function prepareNextRun(message="次の走行を待機中"){
+    clearAutoRearm();
+    if(!cameraOn){ status.textContent="先にカメラを開始してください"; updateState(); return; }
+    armed=true; running=false; finished=false;
+    startTs=0; startWallTime=null;
+    // 初回通過を即許可。ここでperformance.now()を入れると「待機直後の通過」が無視される。
+    lastDetectTs=-Infinity;
+    // prevDataは消さない。カメラ待機中に作った基準フレームを使って初回通過を拾う。
+    passTimes=[];
+    mainTime.textContent="00.000";
+    status.textContent=message;
     updateSummary();
     updateState();
     soundArmed();
   }
 
-  function prepareNextRun(message = "次の走行を待機中") {
-    clearAutoRearm();
-    if (!cameraOn) {
-      status.textContent = "先にカメラを開始してください";
-      updateState();
-      return;
-    }
-    armed = true;
-    running = false;
-    finished = false;
-    startTs = 0;
-    startWallTime = null;
-    lastDetectTs = performance.now();
-    prevData = null;
-    passTimes = [];
-    mainTime.textContent = "00.000";
-    status.textContent = message;
-    updateSummary();
-    updateState();
-  }
-
-  function toggleMeasure() {
+  function toggleMeasure(){
     ensureAudio();
-    if (armed || running) {
-      stopMeasure("計測停止");
-      return;
-    }
+    if(armed || running){ stopMeasure("計測停止"); return; }
     prepareNextRun("計測待機中。最初の通過でスタートします");
   }
 
-  function addPass(ts) {
-    const targetLaps = Math.max(1, Number(targetLapsInput.value || 2));
-    const nowSec = (ts - startTs) / 1000;
+  function addPass(ts){
+    const targetLaps=Math.max(1,Number(targetLapsInput.value||2));
+    soundLineCross();
 
-    if (!running) {
-      running = true;
-      finished = false;
-      startTs = ts;
-      startWallTime = new Date();
-      passTimes.push(0);
-      status.textContent = "スタート検出";
+    if(!running){
+      running=true; finished=false; armed=true;
+      startTs=ts;
+      startWallTime=new Date();
+      passTimes=[0];
+      status.textContent="スタート検出";
       updateSummary();
       updateState();
       return;
     }
 
+    const nowSec=(ts-startTs)/1000;
     passTimes.push(nowSec);
-    const completedLaps = passTimes.length - 1;
+    const completedLaps=passTimes.length-1;
 
-    if (completedLaps >= targetLaps) {
-      finishRun(nowSec, targetLaps);
-    } else {
-      status.textContent = `Lap ${completedLaps}: ${fmt(nowSec - passTimes[passTimes.length - 2])} 秒`;
+    if(completedLaps>=targetLaps){
+      finishRun(nowSec,targetLaps);
+    }else{
+      status.textContent=`Lap ${completedLaps}: ${fmt(nowSec-passTimes[passTimes.length-2])} 秒`;
       updateSummary();
     }
   }
 
-  function finishRun(totalSec, targetLaps) {
-    const finishWallTime = new Date();
-    const splits = [];
-    for (let i = 1; i < passTimes.length; i++) {
-      splits.push(Number((passTimes[i] - passTimes[i - 1]).toFixed(3)));
-    }
+  function finishRun(totalSec,targetLaps){
+    const finishWallTime=new Date();
+    const splits=[];
+    for(let i=1;i<passTimes.length;i++) splits.push(Number((passTimes[i]-passTimes[i-1]).toFixed(3)));
 
-    const result = {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
-      startTime: startWallTime ? startWallTime.toISOString() : null,
-      finishTime: finishWallTime.toISOString(),
-      totalSec: Number(totalSec.toFixed(3)),
+    const result={
+      id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random(),
+      startTime:startWallTime ? startWallTime.toISOString() : null,
+      finishTime:finishWallTime.toISOString(),
+      totalSec:Number(totalSec.toFixed(3)),
       targetLaps,
       splits,
-      passTimes: passTimes.map(v => Number(v.toFixed(3))),
-      settings: {
-        lineDirection: lineDirectionInput.value,
-        linePos: Number(linePosInput.value),
-        bandSize: Number(bandSizeInput.value),
-        threshold: Number(thresholdInput.value),
-        cooldownSec: Number(cooldownSecInput.value),
-        autoRearmDelaySec: Number(autoRearmDelaySecInput.value),
-        leadOnly: leadOnlyInput.value
+      passTimes:passTimes.map(v=>Number(v.toFixed(3))),
+      settings:{
+        lineDirection:lineDirectionInput.value,
+        linePos:Number(linePosInput.value),
+        bandSize:Number(bandSizeInput.value),
+        threshold:Number(thresholdInput.value),
+        cooldownSec:Number(cooldownSecInput.value),
+        autoRearmDelaySec:Number(autoRearmDelaySecInput.value),
+        leadOnly:leadOnlyInput.value
       }
     };
 
+    finished=true; running=false; armed=false;
     addResult(result);
     soundGoal();
-
-    finished = true;
-    running = false;
-    armed = false;
-    status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
+    status.textContent=`${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
     updateSummary();
     updateState();
 
-    const delay = Math.max(500, Number(autoRearmDelaySecInput.value || 5) * 1000);
-    autoRearmTimer = setTimeout(() => {
-      if (cameraOn) prepareNextRun("自動で次の走行を待機中");
-    }, delay);
+    const delay=Math.max(500,Number(autoRearmDelaySecInput.value||5)*1000);
+    autoRearmTimer=setTimeout(()=>{ if(cameraOn) prepareNextRun("自動で次の走行を待機中"); },delay);
   }
 
-  function allResultsCsv() {
-    const rows = [["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec","auto_rearm_delay_sec","lead_only"]];
-    loadResults().forEach(r => {
+  function allResultsCsv(){
+    const rows=[["finish_time","start_time","total_sec","target_laps","lap1_sec","lap2_sec","line_direction","line_pos","band_size","threshold","cooldown_sec","auto_rearm_delay_sec","lead_only"]];
+    loadResults().forEach(r=>{
       rows.push([
-        r.finishTime || "",
-        r.startTime || "",
-        r.totalSec ?? "",
-        r.targetLaps ?? "",
-        r.splits?.[0] ?? "",
-        r.splits?.[1] ?? "",
-        r.settings?.lineDirection ?? "",
-        r.settings?.linePos ?? "",
-        r.settings?.bandSize ?? "",
-        r.settings?.threshold ?? "",
-        r.settings?.cooldownSec ?? "",
-        r.settings?.autoRearmDelaySec ?? "",
-        r.settings?.leadOnly ?? ""
+        r.finishTime||"",r.startTime||"",r.totalSec??"",r.targetLaps??"",
+        r.splits?.[0]??"",r.splits?.[1]??"",
+        r.settings?.lineDirection??"",r.settings?.linePos??"",r.settings?.bandSize??"",
+        r.settings?.threshold??"",r.settings?.cooldownSec??"",r.settings?.autoRearmDelaySec??"",r.settings?.leadOnly??""
       ]);
     });
-    return rows.map(row => row.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+    return rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
   }
 
-  function downloadText(filename, text) {
-    const blob = new Blob([text], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
+  function downloadText(filename,text){
+    const blob=new Blob([text],{type:"text/csv"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=filename;
     a.click();
     URL.revokeObjectURL(a.href);
   }
 
-  function renderRecentResults() {
-    const results = loadResults().slice(0, 2);
-    recentResults.innerHTML = "";
-    for (let i = 0; i < 2; i++) {
-      const r = results[i];
-      const div = document.createElement("div");
-      div.className = "recentMini";
-      if (!r) {
-        div.innerHTML = `
-          <div class="miniHead">直近 ${i + 1}</div>
-          <div class="miniTime">--.---</div>
-          <div class="miniSub">記録なし</div>
-        `;
-      } else {
-        const splits = (r.splits || []).slice(0, 2).map((s, idx) => `L${idx+1} ${fmt(s)}`).join(" / ");
-        div.innerHTML = `
-          <div class="miniHead">直近 ${i + 1}　${r.finishTime ? fmtDateTime(r.finishTime).slice(11) : ""}</div>
-          <div class="miniTime">${fmt(Number(r.totalSec))}</div>
-          <div class="miniSub">${splits}</div>
-        `;
+  function renderRecentResults(){
+    const results=loadResults().slice(0,2);
+    recentResults.innerHTML="";
+    for(let i=0;i<2;i++){
+      const r=results[i], div=document.createElement("div");
+      div.className="recentMini";
+      if(!r){
+        div.innerHTML=`<div class="miniHead">直近 ${i+1}</div><div class="miniTime">--.---</div><div class="miniSub">記録なし</div>`;
+      }else{
+        const splits=(r.splits||[]).slice(0,2).map((s,idx)=>`L${idx+1} ${fmt(s)}`).join(" / ");
+        div.innerHTML=`<div class="miniHead">直近 ${i+1}　${r.finishTime ? fmtDateTime(r.finishTime).slice(11) : ""}</div><div class="miniTime">${fmt(Number(r.totalSec))}</div><div class="miniSub">${splits}</div>`;
       }
       recentResults.appendChild(div);
     }
   }
 
-  function renderResults() {
-    const results = loadResults();
-    resultsList.innerHTML = "";
-    if (results.length === 0) {
-      resultsList.innerHTML = `<div class="note">まだ計測結果がありません。</div>`;
-      return;
-    }
-    const best = Math.min(...results.map(x => Number(x.totalSec)).filter(Number.isFinite));
-    results.forEach((r, idx) => {
-      const div = document.createElement("div");
-      div.className = "resultCard";
-      const isBest = Number(r.totalSec) === best;
-      const splitsText = (r.splits || []).map((s, i) => `Lap ${i+1}: ${fmt(s)}`).join(" / ");
-      div.innerHTML = `
+  function renderResults(){
+    const results=loadResults();
+    resultsList.innerHTML="";
+    if(results.length===0){ resultsList.innerHTML=`<div class="note">まだ計測結果がありません。</div>`; return; }
+    const best=Math.min(...results.map(x=>Number(x.totalSec)).filter(Number.isFinite));
+    results.forEach((r,idx)=>{
+      const div=document.createElement("div");
+      div.className="resultCard";
+      const isBest=Number(r.totalSec)===best;
+      const splitsText=(r.splits||[]).map((s,i)=>`Lap ${i+1}: ${fmt(s)}`).join(" / ");
+      div.innerHTML=`
         <div class="resultHead">
-          <div>
-            <span class="pill">#${results.length - idx}</span>
-            ${isBest ? '<span class="pill">BEST</span>' : ''}
-            <div class="muted">ゴール ${r.finishTime ? fmtDateTime(r.finishTime) : "-"}</div>
-          </div>
+          <div><span class="pill">#${results.length-idx}</span> ${isBest?'<span class="pill">BEST</span>':''}<div class="muted">ゴール ${r.finishTime ? fmtDateTime(r.finishTime) : "-"}</div></div>
           <div class="resultTime">${fmt(Number(r.totalSec))}</div>
         </div>
         <div class="smallGrid">
           <div>スタート：${r.startTime ? fmtDateTime(r.startTime) : "-"}</div>
           <div>ラップ数：${r.targetLaps ?? "-"}</div>
-          <div>検出：${r.settings?.lineDirection === "vertical" ? "縦ライン" : "横ライン"}</div>
+          <div>検出：${r.settings?.lineDirection==="vertical" ? "縦ライン" : "横ライン"}</div>
         </div>
-        <div class="sub">${splitsText}</div>
-      `;
+        <div class="sub">${splitsText}</div>`;
       resultsList.appendChild(div);
     });
   }
 
-  function clearResults() {
-    if (!confirm("計測結果をすべて削除しますか？")) return;
+  function clearResults(){
+    if(!confirm("計測結果をすべて削除しますか？")) return;
     saveResults([]);
     renderResults();
     renderRecentResults();
   }
 
-  function getDetectionRect(vw, vh) {
-    const dir = lineDirectionInput.value;
-    const posPct = Number(linePosInput.value) / 100;
-    const bandPct = Number(bandSizeInput.value) / 100;
-    if (dir === "vertical") {
-      const bandW = Math.max(4, Math.floor(vw * bandPct));
-      const x = Math.max(0, Math.min(vw - bandW, Math.floor(vw * posPct - bandW / 2)));
-      return { x, y: 0, w: bandW, h: vh, dir };
-    } else {
-      const bandH = Math.max(4, Math.floor(vh * bandPct));
-      const y = Math.max(0, Math.min(vh - bandH, Math.floor(vh * posPct - bandH / 2)));
-      return { x: 0, y, w: vw, h: bandH, dir };
+  function getDetectionRect(vw,vh){
+    const dir=lineDirectionInput.value;
+    const posPct=Number(linePosInput.value)/100;
+    const bandPct=Number(bandSizeInput.value)/100;
+    if(dir==="vertical"){
+      const bandW=Math.max(4,Math.floor(vw*bandPct));
+      const x=Math.max(0,Math.min(vw-bandW,Math.floor(vw*posPct-bandW/2)));
+      return {x,y:0,w:bandW,h:vh};
+    }else{
+      const bandH=Math.max(4,Math.floor(vh*bandPct));
+      const y=Math.max(0,Math.min(vh-bandH,Math.floor(vh*posPct-bandH/2)));
+      return {x:0,y,w:vw,h:bandH};
     }
   }
 
-  function drawOverlay(motion) {
-    overlay.width = video.clientWidth * devicePixelRatio;
-    overlay.height = video.clientHeight * devicePixelRatio;
-    octx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-    octx.clearRect(0, 0, overlay.clientWidth, overlay.clientHeight);
+  function drawOverlay(motion){
+    overlay.width=video.clientWidth*devicePixelRatio;
+    overlay.height=video.clientHeight*devicePixelRatio;
+    octx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    octx.clearRect(0,0,overlay.clientWidth,overlay.clientHeight);
 
-    const dir = lineDirectionInput.value;
-    const posPct = Number(linePosInput.value) / 100;
-    const bandPct = Number(bandSizeInput.value) / 100;
-    const hot = motion > Number(thresholdInput.value);
+    const dir=lineDirectionInput.value;
+    const posPct=Number(linePosInput.value)/100;
+    const bandPct=Number(bandSizeInput.value)/100;
+    const hot=motion>Number(thresholdInput.value);
+    octx.fillStyle="rgba(255,255,255,0.10)";
+    octx.strokeStyle=hot ? "#ff4040" : "#00e0ff";
+    octx.lineWidth=3;
 
-    octx.fillStyle = "rgba(255,255,255,0.10)";
-    octx.strokeStyle = hot ? "#ff4040" : "#00e0ff";
-    octx.lineWidth = 3;
-
-    if (dir === "vertical") {
-      const x = overlay.clientWidth * posPct;
-      const w = overlay.clientWidth * bandPct;
-      octx.fillRect(x - w/2, 0, w, overlay.clientHeight);
-      octx.beginPath();
-      octx.moveTo(x, 0);
-      octx.lineTo(x, overlay.clientHeight);
-      octx.stroke();
-    } else {
-      const y = overlay.clientHeight * posPct;
-      const h = overlay.clientHeight * bandPct;
-      octx.fillRect(0, y - h/2, overlay.clientWidth, h);
-      octx.beginPath();
-      octx.moveTo(0, y);
-      octx.lineTo(overlay.clientWidth, y);
-      octx.stroke();
+    if(dir==="vertical"){
+      const x=overlay.clientWidth*posPct;
+      const w=overlay.clientWidth*bandPct;
+      octx.fillRect(x-w/2,0,w,overlay.clientHeight);
+      octx.beginPath(); octx.moveTo(x,0); octx.lineTo(x,overlay.clientHeight); octx.stroke();
+    }else{
+      const y=overlay.clientHeight*posPct;
+      const h=overlay.clientHeight*bandPct;
+      octx.fillRect(0,y-h/2,overlay.clientWidth,h);
+      octx.beginPath(); octx.moveTo(0,y); octx.lineTo(overlay.clientWidth,y); octx.stroke();
     }
   }
 
-  function loop(ts = performance.now()) {
-    rafId = null;
-    if (!cameraOn || !video.videoWidth || !video.videoHeight) return;
+  function loop(ts=performance.now()){
+    rafId=null;
+    if(!cameraOn || !video.videoWidth || !video.videoHeight){
+      if(cameraOn) rafId=requestAnimationFrame(loop);
+      return;
+    }
 
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    work.width = vw;
-    work.height = vh;
+    const vw=video.videoWidth, vh=video.videoHeight;
+    work.width=vw; work.height=vh;
+    wctx.drawImage(video,0,0,vw,vh);
 
-    wctx.drawImage(video, 0, 0, vw, vh);
-    const r = getDetectionRect(vw, vh);
-    const img = wctx.getImageData(r.x, r.y, r.w, r.h);
-    const data = img.data;
+    const r=getDetectionRect(vw,vh);
+    const data=wctx.getImageData(r.x,r.y,r.w,r.h).data;
 
-    let motion = 0;
-    if (prevData && prevData.length === data.length) {
-      let sum = 0;
-      let n = 0;
-      for (let i = 0; i < data.length; i += 16) {
-        const lum = data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114;
-        const plum = prevData[i] * 0.299 + prevData[i+1] * 0.587 + prevData[i+2] * 0.114;
-        sum += Math.abs(lum - plum);
+    let motion=0;
+    if(prevData && prevData.length===data.length){
+      let sum=0, n=0;
+      for(let i=0;i<data.length;i+=16){
+        const lum=data[i]*0.299 + data[i+1]*0.587 + data[i+2]*0.114;
+        const plum=prevData[i]*0.299 + prevData[i+1]*0.587 + prevData[i+2]*0.114;
+        sum += Math.abs(lum-plum);
         n++;
       }
-      motion = sum / Math.max(1, n);
+      motion=sum/Math.max(1,n);
     }
-    prevData = new Uint8ClampedArray(data);
+    prevData=new Uint8ClampedArray(data);
 
-    motionSpan.textContent = motion.toFixed(1);
+    motionSpan.textContent=motion.toFixed(1);
     drawOverlay(motion);
 
-    const threshold = Number(thresholdInput.value);
-    const baseCooldown = Number(cooldownSecInput.value || 5) * 1000;
-    const cooldown = leadOnlyInput.value === "yes" ? baseCooldown : Math.min(baseCooldown, 500);
-    const canDetect = ts - lastDetectTs > cooldown;
+    const threshold=Number(thresholdInput.value);
+    const baseCooldown=Number(cooldownSecInput.value||5)*1000;
+    const cooldown=leadOnlyInput.value==="yes" ? baseCooldown : Math.min(baseCooldown,500);
+    const canDetect=ts-lastDetectTs>cooldown;
 
-    if (armed && !finished && canDetect && motion > threshold) {
-      lastDetectTs = ts;
+    if(armed && !finished && canDetect && motion>threshold){
+      lastDetectTs=ts;
       addPass(ts);
     }
 
-    if (running && !finished) {
-      const elapsed = (ts - startTs) / 1000;
-      mainTime.textContent = fmt(elapsed);
-      totalTime.textContent = fmt(elapsed);
+    if(running && !finished){
+      const elapsed=(ts-startTs)/1000;
+      mainTime.textContent=fmt(elapsed);
+      totalTime.textContent=fmt(elapsed);
     }
 
-    if (cameraOn) rafId = requestAnimationFrame(loop);
+    if(cameraOn) rafId=requestAnimationFrame(loop);
   }
 
-  cameraToggleBtn.addEventListener("click", toggleCamera);
-  measureToggleBtn.addEventListener("click", toggleMeasure);
+  cameraToggleBtn.addEventListener("click",toggleCamera);
+  measureToggleBtn.addEventListener("click",toggleMeasure);
+  timerTab.addEventListener("click",()=>switchPage("timer"));
+  settingsTab.addEventListener("click",()=>switchPage("settings"));
+  resultsTab.addEventListener("click",()=>switchPage("results"));
+  refreshResultsBtn.addEventListener("click",renderResults);
+  exportAllCsvBtn.addEventListener("click",()=>downloadText("trykhana-results.csv",allResultsCsv()));
+  clearResultsBtn.addEventListener("click",clearResults);
 
-  timerTab.addEventListener("click", () => switchPage("timer"));
-  settingsTab.addEventListener("click", () => switchPage("settings"));
-  resultsTab.addEventListener("click", () => switchPage("results"));
-  refreshResultsBtn.addEventListener("click", renderResults);
-  exportAllCsvBtn.addEventListener("click", () => downloadText("trykhana-results.csv", allResultsCsv()));
-  clearResultsBtn.addEventListener("click", clearResults);
-
-  lineDirectionInput.addEventListener("change", () => { prevData = null; });
-  linePosInput.addEventListener("input", () => { prevData = null; });
-  bandSizeInput.addEventListener("input", () => { prevData = null; });
+  lineDirectionInput.addEventListener("change",()=>{prevData=null;});
+  linePosInput.addEventListener("input",()=>{prevData=null;});
+  bandSizeInput.addEventListener("input",()=>{prevData=null;});
 
   renderResults();
   renderRecentResults();
