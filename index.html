@@ -107,6 +107,21 @@
   button.primary { background: #0b63ce; }
   button.danger { background: #9b1c1c; }
   button.good { background: #146b2e; }
+  button.warning { background: #a66a00; }
+  .stateBanner {
+    margin-top: 6px;
+    padding: 7px 8px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    background: #1c1c1c;
+    border: 1px solid #333;
+  }
+  .stateStopped { background: #0b3d78; }
+  .stateArmed { background: #a66a00; }
+  .stateRunning { background: #9b1c1c; }
   label {
     font-size: 12px;
     color: #ddd;
@@ -253,7 +268,7 @@
 
     <div class="controlPanel">
       <button id="startCam" class="primary">カメラ開始</button>
-      <button id="armReset" class="primary">計測待機</button>
+      <button id="measureToggle" class="primary">計測開始</button>
     </div>
 
     <div class="recentResults" id="recentResults"></div>
@@ -326,7 +341,8 @@
   const resultsPage = document.getElementById("resultsPage");
 
   const startCamBtn = document.getElementById("startCam");
-  const armResetBtn = document.getElementById("armReset");
+  const measureToggleBtn = document.getElementById("measureToggle");
+  const stateBanner = document.getElementById("stateBanner");
 
   const refreshResultsBtn = document.getElementById("refreshResults");
   const exportAllCsvBtn = document.getElementById("exportAllCsv");
@@ -376,15 +392,25 @@
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
-  function updateArmResetButton() {
-    if (armed || running) {
-      armResetBtn.textContent = "手動リセット";
-      armResetBtn.classList.remove("primary");
-      armResetBtn.classList.add("danger");
+  function updateMeasureState() {
+    measureToggleBtn.classList.remove("primary", "warning", "danger");
+    stateBanner.classList.remove("stateStopped", "stateArmed", "stateRunning");
+
+    if (running) {
+      measureToggleBtn.textContent = "計測停止";
+      measureToggleBtn.classList.add("danger");
+      stateBanner.textContent = "計測中";
+      stateBanner.classList.add("stateRunning");
+    } else if (armed) {
+      measureToggleBtn.textContent = "計測停止";
+      measureToggleBtn.classList.add("danger");
+      stateBanner.textContent = "計測待機";
+      stateBanner.classList.add("stateArmed");
     } else {
-      armResetBtn.textContent = "計測待機";
-      armResetBtn.classList.remove("danger");
-      armResetBtn.classList.add("primary");
+      measureToggleBtn.textContent = "計測開始";
+      measureToggleBtn.classList.add("primary");
+      stateBanner.textContent = "停止中";
+      stateBanner.classList.add("stateStopped");
     }
   }
 
@@ -464,7 +490,7 @@
     status.textContent = "手動リセット済み";
     lapsBody.innerHTML = "";
     updateSummary();
-    updateArmResetButton();
+    updateMeasureState();
   }
 
   function prepareNextRun(message = "次の走行を待機中") {
@@ -481,19 +507,20 @@
     status.textContent = message;
     lapsBody.innerHTML = "";
     updateSummary();
-    updateArmResetButton();
+    updateMeasureState();
   }
 
-  function armOrReset() {
+  function toggleMeasure() {
     if (armed || running) {
       resetManual();
+      status.textContent = "計測停止";
       return;
     }
     if (!video.srcObject) {
       status.textContent = "先にカメラを開始してください";
       return;
     }
-    prepareNextRun("最初の通過でスタートします");
+    prepareNextRun("計測待機中。最初の通過でスタートします");
   }
 
   function addPass(ts) {
@@ -509,7 +536,7 @@
       status.textContent = "スタート検出";
       renderRows();
       updateSummary();
-      updateArmResetButton();
+      updateMeasureState();
       return;
     }
 
@@ -559,7 +586,7 @@
     status.textContent = `${targetLaps}ラップ完了 / 合計 ${fmt(totalSec)} 秒 / ゴール ${fmtDateTime(result.finishTime)}`;
     renderRows();
     updateSummary();
-    updateArmResetButton();
+    updateMeasureState();
 
     const delay = Math.max(500, Number(autoRearmDelaySecInput.value || 5) * 1000);
     autoRearmTimer = setTimeout(() => {
@@ -772,7 +799,7 @@
   }
 
   startCamBtn.addEventListener("click", startCamera);
-  armResetBtn.addEventListener("click", armOrReset);
+  measureToggleBtn.addEventListener("click", toggleMeasure);
 
   timerTab.addEventListener("click", () => switchPage("timer"));
   settingsTab.addEventListener("click", () => switchPage("settings"));
@@ -788,7 +815,7 @@
   renderResults();
   renderRecentResults();
   updateSummary();
-  updateArmResetButton();
+  updateMeasureState();
 })();
 </script>
 </body>
